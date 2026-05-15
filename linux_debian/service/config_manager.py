@@ -14,7 +14,7 @@ def yaml_read(path_yaml: str = "config.yaml") -> SimpleNamespace:
         return dtns.dict_to_namespace(yaml.safe_load(f))
 
 
-def str_constructor(config_namespace: SimpleNamespace = yaml_read()) -> str:
-    """Permette l'ottenimento della stringa con il formato protocollo:///indirizzo:porta dal file di config"""
+def str_constructor(config_namespace: SimpleNamespace = yaml_read()) -> SimpleNamespace:
+    """"""
     return (str(config_namespace.socket.protocol) + "://" + str(config_namespace.socket.ip) +
             ":" + str(config_namespace.socket.port))

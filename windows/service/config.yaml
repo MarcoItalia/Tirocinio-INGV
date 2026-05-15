@@ -1,6 +1,6 @@
-socket_client:
+socket:
   protocol: tcp #must stay tcp
-  ip: 0.0.0.0 #testing purposes
+  ip: 172.17.69.255 #testing purposes
   port: 5555 #should be 22 in the actual project
 data_window: #except timestamp, these are non functional and just placeholder value.
   channels_start: 0
