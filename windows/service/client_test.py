@@ -1,14 +1,18 @@
 import zmq
+import config_manager
+import timestamp_manager
 
 context = zmq.Context()
 socket = context.socket(zmq.REQ)
-socket.bind("tcp://0.0.0.0:5555")
+config = config_manager.yaml_read("config.yaml")
+socket.bind(str(config.socket_client.protocol) + "://" + str(config.socket_client.ip) +
+            ":" + str(config.socket_client.port))
 
-message = "Hello"
-print(f"Sending {message}..")
+message = timestamp_manager.json_read("timestamp.json")
+print(f"Sending {message.last_timestamp}..")
 
 
-socket.send_string(message)
+socket.send_string(str(message.last_timestamp))
 print(socket.recv_string())
 
 socket.close()
