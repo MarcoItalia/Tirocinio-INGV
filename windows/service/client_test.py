@@ -1,6 +1,7 @@
 import zmq
 import config_manager
 import timestamp_manager
+import numpy as np
 
 context = zmq.Context()
 socket = context.socket(zmq.REQ)
@@ -10,13 +11,13 @@ socket.connect(config_manager.str_constructor(config))
 # str(config.socket.protocol) + "://" + str(config.socket.ip) + ":" + str(config.socket.port)
 try:
     message = timestamp_manager.last_timestamp_read("timestamp.json")
-    print(f"Sending {message}..")
+    print(f"Sending {np.double(message)}..")
 
-    socket.send_string(str(message))
+    socket.send(np.double(message))
 
     print("listening for reply..")
 
-    print(socket.recv_string())
+    print(socket.recv())
     timestamp_manager.last_timestamp_increment("timestamp.json")
 finally:
     socket.close()

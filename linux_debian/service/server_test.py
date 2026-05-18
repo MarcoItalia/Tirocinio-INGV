@@ -10,7 +10,7 @@ config = config_manager.yaml_read("config.yaml")
 
 context_blackbox = zmq.Context()
 socket_blackbox = context_blackbox.socket(
-    zmq.REQ)  # mettere nelle opzioni il multiple
+    zmq.DEALER)  # zmq.REQ
 
 # bind(tcp://0.0.0.0:5555) connect(172.17.64.1)
 socket_client.bind(config_manager.str_constructor(config))
@@ -20,21 +20,29 @@ print("connected to blackbox")
 try:
     print("listening")
 
-    message = socket_client.recv_string()
-    print(f"Received {message}, now forwarding to blackbox")
+    message = socket_client.recv()
+    print(
+        f"Received {(message)}, now forwarding to blackbox")
 
-    socket_blackbox.send_string(message)
+    # socket_blackbox.send(b"", zmq.SNDMORE)
+    # socket_blackbox.send(message)
+    socket_blackbox.send_multipart([b"PEER1", message])
     print("listening to msg")
 
-    message = socket_blackbox.recv_multipart()
+    # socket_blackbox.setsockopt(zmq.RCVTIMEO, 3000)  # 3 secondi
 
-    print(f"Recived {message[0]}")
-    print(f"Recived {message[1]}")
-    print(f"Recived {message[2]}")
+    message0 = socket_blackbox.recv()
+    print(f"Recived {message0}")
 
-    print(f"Sending Client {message[2]}")
+    message1 = socket_blackbox.recv()
+    print(f"Recived {message1}")
 
-    socket_client.send_string((str(message[2])))
+    message2 = socket_blackbox.recv()
+    print(f"Recived {message2}")
+
+    print(f"Sending Client {message2}")
+
+    socket_client.send((message2))
     print("Sent!")
 finally:
     socket_client.close()
