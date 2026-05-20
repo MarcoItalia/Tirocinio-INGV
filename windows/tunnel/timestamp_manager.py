@@ -20,7 +20,7 @@ def is_newer(filename: str, last_timestamp: datetime) -> bool:
         return False  # ignora file con nome non valido
 
 
-def __json_read(path_json: str) -> SimpleNamespace:
+def json_read(path_json: str = "timestamp.json") -> SimpleNamespace:
     """Legge un file json e ritorna un oggetto facilmente leggibile da python"""
     BASE_DIR = os.path.dirname(os.path.abspath(
         __file__))  # si deve decisamente trasformare in un modulo, refactor needed
@@ -30,21 +30,21 @@ def __json_read(path_json: str) -> SimpleNamespace:
         return dtns.dict_to_namespace(json.load(f))
 
 
-def read_timestamp_read(path_json: str = "timestamp.json") -> int:
+def read_timestamp(path_json: str = "timestamp.json") -> int:
     """Legge il file dove è apposto il timestamp e ritorna il suo valore"""
 
-    timestamp_dct = __json_read(path_json)
+    timestamp_dct = json_read(path_json)
     return timestamp_dct.last_timestamp
 
 
-def save_last_timestamp(timestamp: datetime, path_json: str = "timestamp.json"):
+def save_last_timestamp(timestamp, path_json: str = "timestamp.json"):
     """Salva il timestamp nel file"""
 
     BASE_DIR = os.path.dirname(os.path.abspath(
         __file__))  # si deve decisamente trasformare in un modulo, refactor needed
     timestamp_path = os.path.join(BASE_DIR, path_json)
 
-    json_file = __json_read(path_json)
+    json_file = json_read(path_json)
     json_file.last_timestamp = timestamp
 
     with open(timestamp_path, 'w+', encoding="utf-8") as f:
