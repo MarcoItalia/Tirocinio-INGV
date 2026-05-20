@@ -4,8 +4,6 @@ import config_manager
 context_client = zmq.Context()
 socket_client = context_client.socket(zmq.REP)
 config = config_manager.yaml_read("config.yaml")
-# non aspetta messaggi in sospeso alla chiusura
-# socket_client.setsockopt(zmq.LINGER, 0)
 
 
 context_blackbox = zmq.Context()
@@ -24,12 +22,8 @@ try:
     print(
         f"Received {(message)}, now forwarding to blackbox")
 
-    # socket_blackbox.send(b"", zmq.SNDMORE)
-    # socket_blackbox.send(message)
-    socket_blackbox.send_multipart([b"PEER1", message])
+    socket_blackbox.send(message)
     print("listening to msg")
-
-    # socket_blackbox.setsockopt(zmq.RCVTIMEO, 3000)  # 3 secondi
 
     message0 = socket_blackbox.recv()
     print(f"Recived {message0}")
@@ -39,6 +33,8 @@ try:
 
     message2 = socket_blackbox.recv()
     print(f"Recived {message2}")
+
+    # clean message2
 
     print(f"Sending Client {message2}")
 
