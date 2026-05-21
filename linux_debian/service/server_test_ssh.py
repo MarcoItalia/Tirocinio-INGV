@@ -2,6 +2,7 @@ import time
 import timestamp_manager
 
 last_timestamp = timestamp_manager.read_timestamp()
+time.sleep(2)
 for i in range(10):
     try:
 
@@ -15,5 +16,5 @@ for i in range(10):
 
     except EOFError:
         pass
-    time.sleep(7)
+    time.sleep(5)
 print("BB")
