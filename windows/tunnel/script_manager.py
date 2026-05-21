@@ -37,13 +37,5 @@ def start_script(ssh, script_path):
         _, out, err = ssh.exec_command(
             f'nohup python3 "{script_path}" > /tmp/script.log 2>&1 & echo $!'
         )
-        pid = out.read().decode().strip()
-        err_out = err.read().decode().strip()
-        print(f"PID lanciato: {pid}")
-        print(f"Stderr: {err_out}")
-
-        time.sleep(2)
-
-        print("Script avviato")
     except Exception as e:
         print(f"Exception -> {e}")

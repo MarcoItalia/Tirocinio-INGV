@@ -1,0 +1,13 @@
+socket:
+  protocol: tcp #must stay tcp
+  ip: 172.17.69.255 #testing purposes
+  port: 22
+credentials:
+  user: marco
+  passwd: marco
+paths:
+  path_server: /mnt/c/users/marco/Documents/Università/III Anno/Tirocinio
+  path_local: C:/Users/marco/Documents/Università/III Anno/Tirocinio/prova_copia
+#data_window: #these are non functional and just placeholder value.
+#  channels_start: 0
+#  channels_end: 0
