@@ -1,0 +1,9 @@
+#directory
+Script_esempio/
+prova_*
+
+#file nascosti, prevalentemente cache
+__*
+
+#type of file
+*.h5
