@@ -30,6 +30,7 @@ write_dataset[:, :, :] = read_dataset[:,
 write_grp1.setncattr("Timestamp", read_grp4.getncattr("AcqStartTime"))
 write_grp1.setncattr("Channel_start", np.short(CHANNEL_START))
 write_grp1.setncattr("Channel_end", np.short(CHANNEL_END))
+write_grp1.setncattr("Location", "Niscemi")
 write_grp1.setncattr("dt", np.short(write_dataset.shape[0]))
 
 
