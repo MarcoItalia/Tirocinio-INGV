@@ -26,14 +26,12 @@ dataset = list(
     (list((list((list(file_read.values())[0]).values())[0]).values())[0]).values())[0]
 dataset = dataset[:, :520, CHANNEL_START:CHANNEL_END+1]
 print(dataset.shape)
-data1 = grp1.create_dataset("data", data=dataset)
+data1 = grp1.create_dataset("Dataset_Strain_rate", data=dataset)
 
-data1.dims[0].label = 'Time(s)'
-data1.dims[1].label = 'Frequences(Hz)'
+data1.dims[0].label = 'Time'
+data1.dims[1].label = 'Frequences'
 data1.dims[2].label = 'Channels'
 
 
 file_read.close()
 file_out.close()
-
-os.replace("try2", "try2.h5")
