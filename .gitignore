@@ -7,3 +7,4 @@ __*
 
 #type of file
 *.h5
+*.env*
