@@ -28,7 +28,7 @@ def encrypt_env(password: str):
         f.write(salt+encrypted)
 
 
-def load_encrypted_env(password: str):  # -> bytes
+def load_encrypted_env(password: str) -> dict:
     """Load variables from encoded .env"""
     with open(".env.enc", "rb") as f:
         content = f.read()
@@ -40,42 +40,47 @@ def load_encrypted_env(password: str):  # -> bytes
     try:
         decrypted = Fernet(key).decrypt(encrypted)
     except cryptography.exceptions.InvalidSignature as e:
-        return e
+        print("load_encrypted_env raised", repr(e))
+        return None
     except InvalidToken as e:
-        return e
+        print("load_encrypted_env raised", repr(e))
+        return None
     except Exception as e:
-        return e
+        print("load_encrypted_env raised", repr(e))
+        return None
     import io
-    # .replace('\r\n', '\n')
     return dotenv_values(stream=io.StringIO(decrypted.decode().strip()))
 
 
 if __name__ == '__main__':
     match len(sys.argv):
-        case 1:
-            pass  # only name
         case 2:
             try:
-                load_encrypted_env(str(sys.argv[1]))
+                dict_data = load_encrypted_env(str(sys.argv[1]))
+                if dict_data is not None:
+                    print(dict_data)
             except FileNotFoundError:
                 print(
                     "The file you are trying to read doesn't exist. You should create it")
+            except Exception as e:
+                print("Exception:", repr(e))
         case 3:
             match sys.argv[1]:
                 case 'read':
                     try:
                         dict_data = load_encrypted_env(str(sys.argv[2]))
-                        print(dict_data)
+                        if dict_data is not None:
+                            print(dict_data)
                     except FileNotFoundError:
                         print(
                             "The file you are trying to read doesn't exist. You should create it")
                     except Exception as e:
-                        print("Exception:", e)
+                        print("Exception:", repr(e))
                 case 'write':
                     try:
                         encrypt_env(str(sys.argv[2]))
                     except Exception as e:
-                        print(e)
+                        print("Exception: ", e)
                 case _:
                     print("Expected \"mode\" and \"password\" as argument")
         case _:
