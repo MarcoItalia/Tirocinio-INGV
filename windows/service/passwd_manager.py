@@ -7,6 +7,7 @@ import cryptography.exceptions
 import sys
 import base64
 import os
+import io
 
 SALT_DIM = 16
 
@@ -48,7 +49,6 @@ def load_encrypted_env(password: str) -> dict:
     except Exception as e:
         print("load_encrypted_env raised", repr(e))
         return None
-    import io
     return dotenv_values(stream=io.StringIO(decrypted.decode().strip()))
 
 
