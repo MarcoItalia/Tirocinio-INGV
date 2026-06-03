@@ -20,5 +20,5 @@ for i in range(10):
 
     except EOFError:
         pass
-    time.sleep(5)
+    time.sleep(1)
 print("BB")

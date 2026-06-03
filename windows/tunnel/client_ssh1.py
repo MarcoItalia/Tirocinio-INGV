@@ -1,8 +1,6 @@
 import paramiko
 import script_manager
 import timestamp_manager
-import dict_to_namespace as dtns
-import json
 import time
 import config_manager
 import sys
@@ -14,7 +12,6 @@ password = config.credentials.passwd
 path = config.paths.path_server
 working_dir = f"{path}/linux_debian/service/"
 path_local = config.paths.path_local
-# "C:/Users/marco/Documents/Università/III Anno/Tirocinio/prova_copia"
 
 
 def list_file(path_to_list):
@@ -29,7 +26,23 @@ def up_file(file_name: str):
     return file_name
 
 
-    # connect
+def get_next_file(path, last_timestamp, consecutive_fails):
+    """Decide which file to download"""
+    if last_timestamp is None or consecutive_fails >= 2:
+        # first esecution or too much fails → list dir
+        files = list_file(f"{path}/prova_da_copiare")
+        if files != []:
+            print(f"Using list reading {files[0]}")
+            return files[0]
+        else:
+            return None
+        # return files[0] if files else None
+    else:
+        print(f"Using upfile reading {up_file(last_timestamp)}")
+        return up_file(last_timestamp)
+
+
+# connect
 try:
     client = paramiko.client.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -40,7 +53,6 @@ except Exception as e:
     print(f"Cannot connect, exception: {e}")
     sys.exit(-1)
 
-
 # check if script run
 if not script_manager.is_script_running(
         client, "server_test_ssh.py"):
@@ -49,50 +61,31 @@ if not script_manager.is_script_running(
 
 # read timestamp server so i could align client and server ts if needed
 
-
-failed_before = False
 last_timestamp = None
+consecutive_fails = 0
 i = 0
-new_files = []
 
-while i < 10:  # while true
-    if not failed_before:
+while i < 10:
+    last_timestamp = get_next_file(path, last_timestamp, consecutive_fails)
+
+    if last_timestamp is None:
         time.sleep(1)
-    if len(new_files) == 0 and not failed_before:
-        new_files = list_file(f"{path}/prova_da_copiare")
+        continue
 
-    if len(new_files) == 0 and last_timestamp is not None:
-        last_timestamp = up_file(last_timestamp)
-        print(f"Reading {last_timestamp} using upfile")
-    else:
-        try:
-            last_timestamp = new_files.pop(0)
-            print(f"Reading {last_timestamp} using pop")
-        except IndexError:
-            failed_before = not failed_before
-            time.sleep(1)
-            continue
     try:
-
-        sftp_session.get(f"{path}/prova_da_copiare/{str(last_timestamp)}",
-                         f"{path_local}/{str(last_timestamp)}")
-        print(f"{last_timestamp} read")
+        sftp_session.get(f"{path}/prova_da_copiare/{last_timestamp}",
+                         f"{path_local}/{last_timestamp}")
+        print(f"Read {last_timestamp}")
+        consecutive_fails = 0
         i += 1
         timestamp_manager.save_last_timestamp(last_timestamp)
-        sftp_session.remove(
-            f"{path}/prova_da_copiare/{str(last_timestamp)}")
-        failed_before = False
+        sftp_session.remove(f"{path}/prova_da_copiare/{last_timestamp}")
         time.sleep(0.5)
 
     except IOError:
-        if failed_before:
-            last_timestamp = None
-        failed_before = not failed_before
-        print(failed_before)
+        consecutive_fails += 1
+        print("Fallimento")
         time.sleep(1)
-    # except IndexError:
-    #    failed_before = not failed_before
-    #    time.sleep(1)
     except Exception as e:
         print(f"Errore: {e}")
         break
