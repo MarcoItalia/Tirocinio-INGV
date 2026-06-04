@@ -63,7 +63,7 @@ if __name__ == '__main__':
     match len(sys.argv):
         case 2:
             try:
-                dict_data = load_encrypted_env(str(sys.argv[1]))
+                dict_data = load_encrypted_env(sys.argv[1])
                 if dict_data is not None:
                     print(dict_data)
             except FileNotFoundError:
@@ -75,7 +75,7 @@ if __name__ == '__main__':
             match sys.argv[1]:
                 case 'read':
                     try:
-                        dict_data = load_encrypted_env(str(sys.argv[2]))
+                        dict_data = load_encrypted_env_snmspace(sys.argv[2])
                         if dict_data is not None:
                             print(dict_data)
                     except FileNotFoundError:
