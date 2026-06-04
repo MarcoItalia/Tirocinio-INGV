@@ -1,5 +1,6 @@
 import os
 from types import SimpleNamespace
+import numpy as np
 import dict_to_namespace as dtns
 import json
 
@@ -30,11 +31,11 @@ def __json_read(path_json: str) -> SimpleNamespace:
         return dtns.dict_to_namespace(json.load(f))
 
 
-def read_timestamp(path_json: str = "timestamp.json") -> int:
+def read_timestamp(path_json: str = "timestamp.json") -> np.double:
     """Legge il file dove è apposto il timestamp e ritorna il suo valore"""
 
     timestamp_dct = __json_read(path_json)
-    return timestamp_dct.last_timestamp
+    return np.double(timestamp_dct.last_timestamp)
 
 
 def save_last_timestamp(timestamp, path_json: str = "timestamp.json"):

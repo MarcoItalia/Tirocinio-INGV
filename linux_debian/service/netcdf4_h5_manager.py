@@ -47,8 +47,12 @@ def h5_file_write(path_netcdf: str, dataset, timestamp):
 
     write_dataset = write_grp1.createVariable("Strain Rate Dataset", datatype="float32", dimensions=(
         dataset_shape0, dataset_shape1, dataset_shape2))
-    write_dataset[:, :, :] = dataset[:,
-                                     :FREQUENCES, CHANNEL_START:CHANNEL_END+1]
+    if dataset.ndim == 2:
+        write_dataset[0, :, :] = dataset[:FREQUENCES,
+                                         CHANNEL_START:CHANNEL_END+1]
+    else:
+        write_dataset[:, :, :] = dataset[:,
+                                         :FREQUENCES, CHANNEL_START:CHANNEL_END+1]
     write_grp1.setncattr("Timestamp", timestamp)
     write_grp1.setncattr("Channel_start", np.short(CHANNEL_START))
     write_grp1.setncattr("Channel_end", np.short(CHANNEL_END))
