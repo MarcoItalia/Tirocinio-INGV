@@ -8,11 +8,13 @@ import sys
 import base64
 import os
 import io
+from types import SimpleNamespace
+from dict_to_namespace import dict_to_namespace
 
-SALT_DIM = 16
+__SALT_DIM = 16
 
 
-def key_from_password(password: str, salt: bytes) -> bytes:
+def __key_from_password(password: str, salt: bytes) -> bytes:
     """Return bits usable to encode/decode from a password"""
     kdf = PBKDF2HMAC(algorithm=hashes.SHA256(), length=32,
                      salt=salt, iterations=480000)
@@ -21,23 +23,23 @@ def key_from_password(password: str, salt: bytes) -> bytes:
 
 def encrypt_env(password: str):
     """Encode .env file"""
-    salt = os.urandom(SALT_DIM)
+    salt = os.urandom(__SALT_DIM)
     with open(".env", "rb") as f:
         data = f.read()
-    encrypted = Fernet(key_from_password(password, salt)).encrypt(data)
+    encrypted = Fernet(__key_from_password(password, salt)).encrypt(data)
     with open(".env.enc", "wb") as f:
         f.write(salt+encrypted)
 
 
 def load_encrypted_env(password: str) -> dict:
-    """Load variables from encoded .env"""
+    """Load variables from encoded .env. Return them as a Dictionary or None if an error occured"""
     with open(".env.enc", "rb") as f:
         content = f.read()
 
-    salt = content[:16]
-    encrypted = content[16:]
+    salt = content[:__SALT_DIM]
+    encrypted = content[__SALT_DIM:]
 
-    key = key_from_password(password, salt)
+    key = __key_from_password(password, salt)
     try:
         decrypted = Fernet(key).decrypt(encrypted)
     except cryptography.exceptions.InvalidSignature as e:
@@ -50,6 +52,11 @@ def load_encrypted_env(password: str) -> dict:
         print("load_encrypted_env raised", repr(e))
         return None
     return dotenv_values(stream=io.StringIO(decrypted.decode().strip()))
+
+
+def load_encrypted_env_snmspace(password: str) -> SimpleNamespace:
+    """Load variables from encoded .env. Return them as a SimpleNamespace or None if an error occured"""
+    return dict_to_namespace(load_encrypted_env(password))
 
 
 if __name__ == '__main__':
