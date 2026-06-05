@@ -1,13 +1,13 @@
 # IMPORT
 from timestamp_manager import read_timestamp, save_last_timestamp
+from netcdf4_h5_manager import h5_file_write
+from datetime import datetime
 import numpy as np
 import zmq
-import time
 import array
 import os
 import sys
-import netcdf4_h5_manager
-import passwd_manager
+import config_manager
 
 if len(sys.argv) != 2:
     print(
@@ -15,13 +15,13 @@ if len(sys.argv) != 2:
     sys.exit()
 
 # CONFIG
-env_config = passwd_manager.load_encrypted_env_snmspace(sys.argv[1])
-SAVE_PATH = "data"
-PORT = env_config.PORT
-IP_ADDRESS = env_config.IP
-PROTOCOL = "tcp"
-QUEUE_DIM = 100
-socket = f"{PROTOCOL}://{IP_ADDRESS}:{PORT}"
+config = config_manager.yaml_read("config.yaml")
+SAVE_PATH = config.data_dir.save_path
+PORT = config.socket.port
+IP_ADDRESS = config.socket.ip
+PROTOCOL = config.socket.protocol
+QUEUE_DIM = config.data_dir.queue_dim
+socket_str = f"{PROTOCOL}://{IP_ADDRESS}:{PORT}"
 
 # CREATE DIR, if exist ignore the error
 try:
@@ -33,22 +33,23 @@ except FileExistsError:
 # ZMQ connection
 context = zmq.Context()
 socket = context.socket(zmq.REQ)
-socket.connect(socket)
+socket.connect(socket_str)
 # ZMQ REQ/REP
 socket.send(read_timestamp())
 message1 = socket.recv()
 message2 = socket.recv()
-
+print(f"Connection started with {IP_ADDRESS}")
 
 # DATA INITIALIZATION
 # Getting information
 data1 = array.array('i', message1[0:4])
 COUNT = data1[0]
-# data1 = array.array('d', message1[4::])
 data1 = array.array('d', message1[4:])
 TimeStamp = data1[0]
+print(f"Recived data {datetime.fromtimestamp(TimeStamp)}")
 if COUNT == 1:
     data2 = array.array('d', message2[0:48])
+    dt = data2[3]
     data2 = array.array('i', message2[48:64])
     Size_Dist = data2[1]-data2[0]
     Size_Frequence = data2[3]-data2[2]
@@ -61,18 +62,26 @@ else:
 # Constructing data
 StrainRate = np.reshape(data3, (Size_Frequence + 1, Size_Dist + 1))
 # Writing data
-filenames = next(os.walk(SAVE_PATH), (None, None, []))[2]  # [] if no file
+filenames = next(os.walk(SAVE_PATH), (None, None, []))[2]
 if len(filenames) < QUEUE_DIM:
-    netcdf4_h5_manager.h5_file_write(
-        f"{SAVE_PATH}/{str(int(TimeStamp))}", StrainRate, TimeStamp)
+    print("Writing in the Queue")
+    h5_file_write(f"{SAVE_PATH}/{str(int(TimeStamp))}",
+                  StrainRate, TimeStamp, dt)
+else:
+    print(
+        f"Queue Full, lost {datetime.fromtimestamp(TimeStamp)} data")
 
 save_last_timestamp(TimeStamp)
 
+
 i = 0
 # CONTINOUS COLLECTION
-while i < 10:
-    time.sleep(0.4)
+while i < 10:  # True
+
+    print()
+
     # ZMQ REQ/REP
+    # reconnect ?
     socket.send(np.double(TimeStamp))
     message1 = socket.recv()
     message2 = socket.recv()
@@ -80,20 +89,26 @@ while i < 10:
 
     # Getting information
     data2 = array.array('d', message2[0:48])
+    dt = data2[3]
     data2 = array.array('i', message2[48:64])
-    Size_Dist = data2[1]-data2[0]
-    Size_Frequence = data2[3]-data2[2]
-    # data1 = array.array('d', message1[4::])
+    Size_Dist = data2[1]-data2[0]  # channels
+    Size_Frequence = data2[3]-data2[2]  # frequences
     data1 = array.array('d', message1[4:])
+    print(f"Recived data {datetime.fromtimestamp(TimeStamp)}")
+
     if TimeStamp < data1[0]:
         i += 1
         TimeStamp = data1[0]
         data3 = array.array('f', message3)
         StrainRate = np.reshape(data3, (Size_Frequence + 1, Size_Dist+1))
         filenames = next(os.walk(SAVE_PATH), (None, None, []))[
-            2]  # [] if no file
+            2]
         if len(filenames) < QUEUE_DIM:
-            netcdf4_h5_manager.h5_file_write(
-                f"{SAVE_PATH}/{str(int(TimeStamp))}", StrainRate, TimeStamp)
+            print("Writing in the Queue")
+            h5_file_write(f"{SAVE_PATH}/{str(int(TimeStamp))}",
+                          StrainRate, TimeStamp, dt)
+        else:
+            print(
+                f"Queue Full, lost {datetime.fromtimestamp(TimeStamp)} data")
 
         save_last_timestamp(TimeStamp)

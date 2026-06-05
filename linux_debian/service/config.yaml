@@ -1,12 +1,12 @@
 socket:
-  client:
-    protocol: tcp #must stay tcp
-    ip: 0.0.0.0 #testing purposes
-    port: 5555 #should be 22 in the actual project
-  server:
-    protocol: tcp #must stay tcp
-    ip: 172.17.64.1 #testing purposes
-    port: 5000 #should be 22 in the actual project
+  protocol: tcp #must stay tcp
+  ip: 0.0.0.0 #testing purposes
+  port: 5555
 data_window: #these are non functional and just placeholder value.
   channels_start: 0
   channels_end: 0
+  overlap: 20
+  location: "Niscemi"
+data_dir:
+  save_path: "data"
+  queue_dim: 20
