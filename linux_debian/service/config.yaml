@@ -2,9 +2,9 @@ socket:
   protocol: tcp #must stay tcp
   ip: 0.0.0.0 #testing purposes
   port: 5555
-data_window: #these are non functional and just placeholder value.
-  channels_start: 0
-  channels_end: 0
+data_window:
+  channels_start: 150
+  channels_end: 300
   overlap: 20
   location: "Niscemi"
 data_dir:

@@ -5,11 +5,12 @@ last_timestamp = timestamp_manager.read_timestamp()
 
 time.sleep(2)
 
-for i in range(20):
+
+for i in range(10):
     try:
 
-        # gen a document in the local dir
-        with open((f"/mnt/c/users/marco/Documenti/Università/III Anno/Tirocinio/prova_da_copiare/{str(int(last_timestamp))}.txt"), "w+", encoding="utf-8") as f:
+        # gen a document in the absolute dir
+        with open((f"/mnt/c/users/marco/Documents/Università/III Anno/Tirocinio/linux_debian/service/prova/{str(int(last_timestamp))}.txt"), "w+", encoding="utf-8") as f:
             f.write("Stuff " + str(int(last_timestamp)))
         # check for permissions..
 

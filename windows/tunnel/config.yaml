@@ -6,8 +6,8 @@ credentials:
   user: marco
   passwd: marco
 paths:
-  path_server: /mnt/c/users/marco/Documents/Università/III Anno/Tirocinio
+  path_server: /mnt/c/users/marco/Documents/Università/III Anno/Tirocinio/linux_debian/service
   path_local: C:/Users/marco/Documents/Università/III Anno/Tirocinio/prova_copia
-#data_window: #these are non functional and just placeholder value.
-#  channels_start: 0
-#  channels_end: 0
+  server_save_dir: "prova"
+extension: .txt
+server_script_name: server_test_ssh.py
