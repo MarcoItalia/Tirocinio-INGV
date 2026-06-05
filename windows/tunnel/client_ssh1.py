@@ -5,6 +5,8 @@ import time
 import config_manager
 import sys
 
+FILE_EXT = ".txt"
+
 config = config_manager.yaml_read("config.yaml")
 host = config.socket.ip
 username = config.credentials.user
@@ -20,25 +22,34 @@ def list_file(path_to_list):
     return [f for f in files]
 
 
-def up_file(file_name: str):
-    extension = file_name.find(".txt")
-    file_name = str(int(file_name[0:extension])+1)+file_name[extension:]
-    return file_name
+def up_file(list_last_timestamp):
+    if len(list_last_timestamp) > 1:
+        print("Using list")
+        return list_last_timestamp[1:]
+
+    extension = list_last_timestamp[0].find(FILE_EXT)
+
+    file_name = list_last_timestamp[0]
+    print(f"Incrementing {file_name}")
+    list_last_timestamp[0] = str(
+        int(file_name[:extension])+1)+file_name[extension:]
+    print(list_last_timestamp[0])
+    return list_last_timestamp
 
 
 def get_next_file(path, last_timestamp, consecutive_fails):
     """Decide which file to download"""
-    if last_timestamp is None or consecutive_fails >= 2:
+    if len(last_timestamp) == 0 or consecutive_fails >= 2:
         # first esecution or too much fails → list dir
         files = list_file(f"{path}/prova_da_copiare")
         if files != []:
-            print(f"Using list reading {files[0]}")
-            return files[0]
+            print(f"Inizializing file list..  {files}")
+            return files
         else:
-            return None
+            return []
         # return files[0] if files else None
     else:
-        print(f"Using upfile reading {up_file(last_timestamp)}")
+        # print(f"Using upfile reading {up_file(last_timestamp)}")
         return up_file(last_timestamp)
 
 
@@ -61,25 +72,24 @@ if not script_manager.is_script_running(
 
 # read timestamp server so i could align client and server ts if needed
 
-last_timestamp = None
+last_timestamp = []
 consecutive_fails = 0
 i = 0
 
-while i < 10:
+while i < 30:
     last_timestamp = get_next_file(path, last_timestamp, consecutive_fails)
-
-    if last_timestamp is None:
-        time.sleep(1)
+    print(last_timestamp)
+    if len(last_timestamp) == 0:
         continue
 
     try:
-        sftp_session.get(f"{path}/prova_da_copiare/{last_timestamp}",
-                         f"{path_local}/{last_timestamp}")
-        print(f"Read {last_timestamp}")
+        sftp_session.get(f"{path}/prova_da_copiare/{last_timestamp[0]}",
+                         f"{path_local}/{last_timestamp[0]}")
+        print(f"Read {last_timestamp[0]}")
         consecutive_fails = 0
         i += 1
-        timestamp_manager.save_last_timestamp(last_timestamp)
-        sftp_session.remove(f"{path}/prova_da_copiare/{last_timestamp}")
+        timestamp_manager.save_last_timestamp(last_timestamp[0])
+        sftp_session.remove(f"{path}/prova_da_copiare/{last_timestamp[0]}")
         time.sleep(0.5)
 
     except IOError:
