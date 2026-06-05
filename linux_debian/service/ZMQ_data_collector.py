@@ -1,19 +1,39 @@
 # IMPORT
+from timestamp_manager import read_timestamp, save_last_timestamp
 import numpy as np
 import zmq
 import time
 import array
+import os
 import sys
-from timestamp_manager import read_timestamp, save_last_timestamp
 import netcdf4_h5_manager
+import passwd_manager
 
-SAVE_PATH = "/data/"
+if len(sys.argv) != 2:
+    print(
+        "Wrong number of arguments, expected \"password\" as an argument")
+    sys.exit()
+
+# CONFIG
+env_config = passwd_manager.load_encrypted_env_snmspace(sys.argv[1])
+SAVE_PATH = "data"
+PORT = env_config.PORT
+IP_ADDRESS = env_config.IP
+PROTOCOL = "tcp"
+QUEUE_DIM = 100
+socket = f"{PROTOCOL}://{IP_ADDRESS}:{PORT}"
+
+# CREATE DIR, if exist ignore the error
+try:
+    os.mkdir(SAVE_PATH)
+except FileExistsError:
+    pass
 
 # ZMQ INITIALIZATION
 # ZMQ connection
 context = zmq.Context()
 socket = context.socket(zmq.REQ)
-socket.connect("tcp://ip_address:port")  # TO FILL #####
+socket.connect(socket)
 # ZMQ REQ/REP
 socket.send(read_timestamp())
 message1 = socket.recv()
@@ -22,31 +42,30 @@ message2 = socket.recv()
 
 # DATA INITIALIZATION
 # Getting information
-DATA1 = array.array('i', message1[0:4])
-COUNT = DATA1[0]
-# DATA1 = array.array('d', message1[4::])
-DATA1 = array.array('d', message1[4:])
-TimeStamp = DATA1[0]
+data1 = array.array('i', message1[0:4])
+COUNT = data1[0]
+# data1 = array.array('d', message1[4::])
+data1 = array.array('d', message1[4:])
+TimeStamp = data1[0]
 if COUNT == 1:
-    DATA2 = array.array('d', message2[0:48])
-    # Spacing_Dist = DATA2[0]
-    # Spacing_Frequence = DATA2[1]/1000
-    # Origin_Dist = DATA2[3]
-    DATA2 = array.array('i', message2[48:64])
-    Size_Dist = DATA2[1]-DATA2[0]
-    Size_Frequence = DATA2[3]-DATA2[2]
+    data2 = array.array('d', message2[0:48])
+    data2 = array.array('i', message2[48:64])
+    Size_Dist = data2[1]-data2[0]
+    Size_Frequence = data2[3]-data2[2]
     message3 = socket.recv()
-    DATA3 = array.array('f', message3)
+    data3 = array.array('f', message3)
 else:
     print("   ")
     print("Script stopped --->>>  Raw data is not a valid dataset")
     sys.exit()
 # Constructing data
-StrainRate = np.reshape(DATA3, (Size_Frequence + 1, Size_Dist + 1))
-# Distance = (np.arange(0, Size_Dist) * Spacing_Dist + Origin_Dist)/1000
-# Frequence = np.arange(0, Size_Frequence)*Spacing_Frequence
-netcdf4_h5_manager.h5_file_write(
-    f"{SAVE_PATH}{str(int(TimeStamp))}", StrainRate, TimeStamp)
+StrainRate = np.reshape(data3, (Size_Frequence + 1, Size_Dist + 1))
+# Writing data
+filenames = next(os.walk(SAVE_PATH), (None, None, []))[2]  # [] if no file
+if len(filenames) < QUEUE_DIM:
+    netcdf4_h5_manager.h5_file_write(
+        f"{SAVE_PATH}/{str(int(TimeStamp))}", StrainRate, TimeStamp)
+
 save_last_timestamp(TimeStamp)
 
 i = 0
@@ -60,20 +79,21 @@ while i < 10:
     message3 = socket.recv()
 
     # Getting information
-    DATA2 = array.array('d', message2[0:48])
-    # Spacing_Dist = DATA2[0]
-    # Spacing_Frequence = DATA2[1]/1000
-    # Origin_Dist = DATA2[3]
-    DATA2 = array.array('i', message2[48:64])
-    Size_Dist = DATA2[1]-DATA2[0]
-    Size_Frequence = DATA2[3]-DATA2[2]
-    # DATA1 = array.array('d', message1[4::])
-    DATA1 = array.array('d', message1[4:])
-    if TimeStamp < DATA1[0]:
+    data2 = array.array('d', message2[0:48])
+    data2 = array.array('i', message2[48:64])
+    Size_Dist = data2[1]-data2[0]
+    Size_Frequence = data2[3]-data2[2]
+    # data1 = array.array('d', message1[4::])
+    data1 = array.array('d', message1[4:])
+    if TimeStamp < data1[0]:
         i += 1
-        TimeStamp = DATA1[0]
-        DATA3 = array.array('f', message3)
-        StrainRate = np.reshape(DATA3, (Size_Frequence + 1, Size_Dist+1))
-        netcdf4_h5_manager.h5_file_write(
-            f"{SAVE_PATH}{str(int(TimeStamp))}", StrainRate, TimeStamp)
+        TimeStamp = data1[0]
+        data3 = array.array('f', message3)
+        StrainRate = np.reshape(data3, (Size_Frequence + 1, Size_Dist+1))
+        filenames = next(os.walk(SAVE_PATH), (None, None, []))[
+            2]  # [] if no file
+        if len(filenames) < QUEUE_DIM:
+            netcdf4_h5_manager.h5_file_write(
+                f"{SAVE_PATH}/{str(int(TimeStamp))}", StrainRate, TimeStamp)
+
         save_last_timestamp(TimeStamp)
