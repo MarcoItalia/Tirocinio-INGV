@@ -19,7 +19,7 @@ def h5_file_read(path_netcdf: str, callback):
             return callback(var)
 
 
-def read_first_variable(group):
+def read_first_variable(group) -> Dataset:
     """Recursive read of .h5 group, until it finds a variable"""
     if group.variables:
         return next(iter(group.variables.values()))
@@ -36,7 +36,7 @@ def process(var):
 
 
 def h5_file_write(path_netcdf: str, dataset, timestamp, dt):
-    """Write h5 file from the path. The format is specific, Group-> Dataset | Attributes. Try to set the attributes if they are given, else None"""
+    """Write h5 file from the path. The format is specific, Group-> Dataset | Attributes"""
     position = path_netcdf.find(".h5")
     if position != -1:
         path_netcdf = path_netcdf[:position]

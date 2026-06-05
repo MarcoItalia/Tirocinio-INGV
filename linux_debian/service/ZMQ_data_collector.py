@@ -49,7 +49,7 @@ TimeStamp = data1[0]
 print(f"Recived data {datetime.fromtimestamp(TimeStamp, tz=timezone.utc)}")
 if COUNT == 1:
     data2 = array.array('d', message2[0:48])
-    dt = data2[3]
+    dt = data2[2]
     data2 = array.array('i', message2[48:64])
     Size_Dist = data2[1]-data2[0]
     Size_Frequence = data2[3]-data2[2]
@@ -89,7 +89,7 @@ while i < 10:  # True
 
     # Getting information
     data2 = array.array('d', message2[0:48])
-    dt = data2[3]
+    dt = data2[2]
     data2 = array.array('i', message2[48:64])
     Size_Dist = data2[1]-data2[0]  # channels
     Size_Frequence = data2[3]-data2[2]  # frequences
