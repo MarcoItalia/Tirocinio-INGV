@@ -1,7 +1,7 @@
 # IMPORT
 from timestamp_manager import read_timestamp, save_last_timestamp
 from netcdf4_h5_manager import h5_file_write
-from datetime import datetime
+from datetime import datetime, timezone
 import numpy as np
 import zmq
 import array
@@ -46,7 +46,7 @@ data1 = array.array('i', message1[0:4])
 COUNT = data1[0]
 data1 = array.array('d', message1[4:])
 TimeStamp = data1[0]
-print(f"Recived data {datetime.fromtimestamp(TimeStamp)}")
+print(f"Recived data {datetime.fromtimestamp(TimeStamp, tz=timezone.utc)}")
 if COUNT == 1:
     data2 = array.array('d', message2[0:48])
     dt = data2[3]
@@ -69,7 +69,7 @@ if len(filenames) < QUEUE_DIM:
                   StrainRate, TimeStamp, dt)
 else:
     print(
-        f"Queue Full, lost {datetime.fromtimestamp(TimeStamp)} data")
+        f"Queue Full, lost {datetime.fromtimestamp(TimeStamp, tz=timezone.utc)} data")
 
 save_last_timestamp(TimeStamp)
 
@@ -94,7 +94,7 @@ while i < 10:  # True
     Size_Dist = data2[1]-data2[0]  # channels
     Size_Frequence = data2[3]-data2[2]  # frequences
     data1 = array.array('d', message1[4:])
-    print(f"Recived data {datetime.fromtimestamp(TimeStamp)}")
+    print(f"Recived data {datetime.fromtimestamp(TimeStamp, tz=timezone.utc)}")
 
     if TimeStamp < data1[0]:
         i += 1
@@ -109,6 +109,6 @@ while i < 10:  # True
                           StrainRate, TimeStamp, dt)
         else:
             print(
-                f"Queue Full, lost {datetime.fromtimestamp(TimeStamp)} data")
+                f"Queue Full, lost {datetime.fromtimestamp(TimeStamp, tz=timezone.utc)} data")
 
         save_last_timestamp(TimeStamp)
