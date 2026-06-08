@@ -2,6 +2,11 @@ socket:
   protocol: tcp #must stay tcp
   ip: 172.17.69.255 #testing purposes
   port: 22
+data_window:
+  channels_start: 150
+  channels_end: 300
+  overlap: 0
+  location: "Niscemi"
 credentials:
   user: marco
   passwd: marco

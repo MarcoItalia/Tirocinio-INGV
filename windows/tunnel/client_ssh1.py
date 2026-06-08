@@ -20,9 +20,10 @@ SERVER_DIR_NAME = config.paths.server_save_dir
 SCRIPT_NAME = config.server_script_name
 
 
-def list_file(path_to_list) -> list:
+def list_file(path_to_list: str = None) -> list:
     """Get the file list from the connected machine"""
-    sftp_session.chdir(path_to_list)
+    if path_to_list is not None:
+        sftp_session.chdir(path_to_list)
     files = sftp_session.listdir()
     return [f for f in files]
 
@@ -36,11 +37,11 @@ def up_file(list_last_timestamp, consecutive_fails) -> list:
         return []
 
     if consecutive_fails == 0:
-        extension = list_last_timestamp[0].find(FILE_EXT)
+        pos_ext = list_last_timestamp[0].find(FILE_EXT)
         file_name = list_last_timestamp[0]
         print(f"Incrementing {file_name}")
         list_last_timestamp[0] = str(
-            int(file_name[:extension])+1)+file_name[extension:]
+            int(file_name[:pos_ext])+1)+file_name[pos_ext:]
     print(list_last_timestamp[0])
     return list_last_timestamp
 
@@ -76,9 +77,9 @@ if not script_manager.is_script_running(
         client, "server_test_ssh.py"):
     print(f"Starting script at {PATH_SERVER}/{SCRIPT_NAME}")
     script_manager.start_script(client, f"{PATH_SERVER}/{SCRIPT_NAME}")
-time.sleep(1)
 print(script_manager.is_script_running(
     client, SCRIPT_NAME))
+time.sleep(1)
 
 last_timestamp = []
 consecutive_fails = 0
