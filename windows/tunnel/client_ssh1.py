@@ -30,7 +30,7 @@ def list_file(path_to_list) -> list:
 def up_file(list_last_timestamp, consecutive_fails) -> list:
     """Get a list and the number of fails. Return a list that start with the next file to search"""
     if len(list_last_timestamp) > 1:
-        print("Using list")
+        print("Reading from list")
         return list_last_timestamp[1:]
     if len(list_last_timestamp) == 0:
         return []
@@ -84,7 +84,7 @@ last_timestamp = []
 consecutive_fails = 0
 i = 0
 
-while i < 10:
+while i < 60:  # true
     last_timestamp = get_next_file(
         f"{PATH_SERVER}/{SERVER_DIR_NAME}/", last_timestamp, consecutive_fails)
 
@@ -111,7 +111,7 @@ while i < 10:
     except IOError:
         consecutive_fails += 1
         print("Fallimento")
-        time.sleep(0.4)
+        time.sleep(0.3)
     except Exception as e:
         print(f"Errore: {e}")
         break

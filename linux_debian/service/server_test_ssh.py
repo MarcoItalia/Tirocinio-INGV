@@ -6,7 +6,7 @@ last_timestamp = timestamp_manager.read_timestamp()
 time.sleep(2)
 
 
-for i in range(10):
+for i in range(60):
     try:
 
         # gen a document in the absolute dir
@@ -21,5 +21,5 @@ for i in range(10):
 
     except EOFError:
         pass
-    time.sleep(1)
+    time.sleep(0.6)
 print("BB")

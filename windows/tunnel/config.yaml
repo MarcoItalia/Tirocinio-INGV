@@ -8,6 +8,7 @@ credentials:
 paths:
   path_server: /mnt/c/users/marco/Documents/Università/III Anno/Tirocinio/linux_debian/service
   path_local: C:/Users/marco/Documents/Università/III Anno/Tirocinio/prova_copia
-  server_save_dir: "prova"
+  server_save_dir: prova
+  local_save_dir: prova
 extension: .txt
 server_script_name: server_test_ssh.py
