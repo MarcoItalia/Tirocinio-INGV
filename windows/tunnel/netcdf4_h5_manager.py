@@ -5,6 +5,8 @@ import config_manager
 
 CONFIG = config_manager.yaml_read("config.yaml")
 OVERLAP = CONFIG.data_window.overlap  # config
+if OVERLAP == 0:
+    OVERLAP = 1
 CHANNEL_START = CONFIG.data_window.channels_start  # config
 CHANNEL_END = CONFIG.data_window.channels_end  # config
 LOCATION = CONFIG.data_window.location  # config
@@ -36,7 +38,7 @@ def process(var):
 
 def read_attribute(path_netcdf, attr: str = "dt"):
     """Read attribute passed in the function"""
-    print(type(path_netcdf))
+
     if isinstance(path_netcdf, str):
         with Dataset(path_netcdf, 'r') as file_read:
             for group in file_read.groups.values():
@@ -54,17 +56,16 @@ def read_attribute(path_netcdf, attr: str = "dt"):
             except AttributeError:
                 pass
         return None
-    return -1
+    return None
 
 
-def h5_file_write(path_netcdf: str, dataset, timestamp, dt):
-    """Write h5 file from the path. The format is specific, Group-> Dataset | Attributes"""
-    position = path_netcdf.find(".h5")
-    if position != -1:
-        path_netcdf = path_netcdf[:position]
-    file_write = Dataset(path_netcdf, 'w')
-
-    write_grp1 = file_write.createGroup("dataset")
+def _initialize(dataset_instance, dataset, timestamp, dt):
+    write_grp1 = dataset_instance.createGroup("dataset")
+    write_grp1.setncattr("Timestamp", timestamp)
+    write_grp1.setncattr("Channel_start", np.short(CHANNEL_START))
+    write_grp1.setncattr("Channel_end", np.short(CHANNEL_END))
+    write_grp1.setncattr("Location", LOCATION)
+    write_grp1.setncattr("dt_millisec", np.short(dt))
     if dataset.ndim == 2:
         dataset_shape0 = write_grp1.createDimension("Time", 1)
         dataset_shape1 = write_grp1.createDimension(
@@ -73,25 +74,42 @@ def h5_file_write(path_netcdf: str, dataset, timestamp, dt):
         dataset_shape0 = write_grp1.createDimension("Time", None)
         dataset_shape1 = write_grp1.createDimension(
             "Frequences", dataset.shape[1] - OVERLAP)
-
     dataset_shape2 = write_grp1.createDimension(
         "Channels", CHANNEL_END + 1 - CHANNEL_START)
-    # list((list((list(file_read.groups.keys())[0]).groups.keys())[0]).groups.keys())[0]
 
-    write_dataset = write_grp1.createVariable("StrainRate", datatype="float32", dimensions=(
+    write_grp1.createVariable("StrainRate", datatype="float32", dimensions=(
         dataset_shape0, dataset_shape1, dataset_shape2))
-    if dataset.ndim == 2:
-        write_dataset[0, :, :] = dataset[:-OVERLAP,
-                                         CHANNEL_START:CHANNEL_END+1]
+
+
+def h5_file_write(path_netcdf, dataset, timestamp, dt, position: int = 0):
+    """Write h5 file from the path or Dataset. The format is specific, Group-> Dataset | Attributes"""
+    if isinstance(path_netcdf, str):
+        pos_ext = path_netcdf.find(".h5")
+        if pos_ext != -1:
+            path_netcdf = path_netcdf[:pos_ext]
+        file_write = Dataset(path_netcdf, 'w')
+    elif isinstance(path_netcdf, Dataset):
+        file_write = path_netcdf
     else:
-        write_dataset[:, :, :] = dataset[:,
-                                         :-OVERLAP, CHANNEL_START:CHANNEL_END+1]
-    write_grp1.setncattr("Timestamp", timestamp)
-    write_grp1.setncattr("Channel_start", np.short(CHANNEL_START))
-    write_grp1.setncattr("Channel_end", np.short(CHANNEL_END))
-    write_grp1.setncattr("Location", LOCATION)
-    write_grp1.setncattr("dt_millisec", np.short(dt))
+        raise ValueError
 
-    file_write.close()
+    if "dataset" not in file_write.groups:
+        _initialize(file_write, dataset, timestamp, dt)
+        write_grp1 = file_write.groups["dataset"]
+    else:
+        write_grp1 = file_write.groups["dataset"]
+        write_grp1.setncattr("dt_millisec", np.short(
+            write_grp1.getncattr("dt_millisec")) + np.short(dt))
 
-    os.replace(path_netcdf, f"{path_netcdf}.h5")
+    write_dataset = write_grp1.variables["StrainRate"]
+
+    if dataset.ndim == 2:
+        write_dataset[position, :, :] = dataset[:-OVERLAP,
+                                                CHANNEL_START:CHANNEL_END+1]
+    else:
+        write_dataset[position:, :, :] = dataset[:,
+                                                 :-OVERLAP, CHANNEL_START:CHANNEL_END+1]
+
+    if isinstance(path_netcdf, str):
+        file_write.close()
+        os.replace(path_netcdf, f"{path_netcdf}.h5")

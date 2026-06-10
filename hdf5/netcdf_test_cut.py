@@ -17,21 +17,21 @@ read_grp4 = read_grp3.groups[list(read_grp3.groups.keys())[0]]
 read_dataset = read_grp4.variables.get("Strain Rate [nStrain|s]")
 
 for i in range(read_dataset.shape[0]):
-    file_write = Dataset(f"n{i}.h5", 'w')
+    file_write = Dataset(f"{i}.0.h5", 'w')
     write_grp1 = file_write.createGroup("dataset")
     dataset_shape0 = write_grp1.createDimension("Time", None)
     dataset_shape1 = write_grp1.createDimension("Frequences", FREQUENCES)
     dataset_shape2 = write_grp1.createDimension(
-        "Channels", CHANNEL_END + 1 - CHANNEL_START)
-    write_dataset = write_grp1.createVariable("Strain Rate Dataset", datatype="float32", dimensions=(
+        "Channels", None)
+    write_dataset = write_grp1.createVariable("StrainRate", datatype="float32", dimensions=(
         dataset_shape0, dataset_shape1, dataset_shape2))
     write_dataset[0, :, :] = read_dataset[i,
-                                          :FREQUENCES, CHANNEL_START:CHANNEL_END+1]
+                                          :FREQUENCES, :]
     write_grp1.setncattr("Timestamp", read_grp4.getncattr("AcqStartTime"))
     write_grp1.setncattr("Channel_start", np.short(CHANNEL_START))
     write_grp1.setncattr("Channel_end", np.short(CHANNEL_END))
     write_grp1.setncattr("Location", "Niscemi")
-    write_grp1.setncattr("dt", np.short(write_dataset.shape[0]))
+    write_grp1.setncattr("dt", 5)
 
     file_write.close()
 
