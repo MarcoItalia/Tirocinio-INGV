@@ -9,10 +9,6 @@ import os
 import sys
 import config_manager
 
-if len(sys.argv) != 2:
-    print(
-        "Wrong number of arguments, expected \"password\" as an argument")
-    sys.exit()
 
 # CONFIG
 config = config_manager.yaml_read("config.yaml")
@@ -49,10 +45,8 @@ TimeStamp = data1[0]
 print(f"Recived data {datetime.fromtimestamp(TimeStamp, tz=timezone.utc)}")
 if COUNT == 1:
     data2 = array.array('d', message2[0:48])
-    dt = data2[2]
-    print(f"dt: {dt}")
-    dt1 = data2[1]
-    print(f"dt1: {dt1}")
+    dt = data2[1]
+    print(f"dt1: {dt}")
 
     data2 = array.array('i', message2[48:64])
     Size_Dist = data2[1]-data2[0]
@@ -70,8 +64,6 @@ StrainRate = np.reshape(data3, (Size_Frequence + 1, Size_Dist + 1))
 filenames = next(os.walk(SAVE_PATH), (None, None, []))[2]
 if len(filenames) < QUEUE_DIM:
     print("Writing in the Queue")
-    # h5_file_write(f"{SAVE_PATH}/{str(int(TimeStamp))}",
-    # StrainRate, TimeStamp, dt)
     h5_file_write(f"{SAVE_PATH}/{str((TimeStamp))}",
                   StrainRate, TimeStamp, dt)
 else:
@@ -83,6 +75,7 @@ save_last_timestamp(TimeStamp)
 
 i = 0
 # CONTINOUS COLLECTION
+# controllare che la connessione sia valida se da errore
 while i < 60:  # True
 
     print()
@@ -96,10 +89,7 @@ while i < 60:  # True
 
     # Getting information
     data2 = array.array('d', message2[0:48])
-    dt = data2[2]
-    print(f"dt: {dt}")
-    dt1 = data2[1]
-    print(f"dt1: {dt1}")
+    dt = data2[1]
 
     data2 = array.array('i', message2[48:64])
     Size_Dist = data2[1]-data2[0]  # channels
@@ -118,8 +108,6 @@ while i < 60:  # True
             2]
         if len(filenames) < QUEUE_DIM:
             print("Writing in the Queue")
-            # h5_file_write(f"{SAVE_PATH}/{str(int(TimeStamp))}",
-            # StrainRate, TimeStamp, dt)
             h5_file_write(f"{SAVE_PATH}/{str((TimeStamp))}",
                           StrainRate, TimeStamp, dt)
         else:
