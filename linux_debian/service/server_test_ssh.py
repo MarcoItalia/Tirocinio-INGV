@@ -1,4 +1,5 @@
 import time
+from numpy import double
 import timestamp_manager
 
 last_timestamp = timestamp_manager.read_timestamp()
@@ -10,7 +11,7 @@ for i in range(60):
     try:
 
         # gen a document in the absolute dir
-        with open((f"/mnt/c/users/marco/Documents/Università/III Anno/Tirocinio/linux_debian/service/prova/{str(int(last_timestamp))}.txt"), "w+", encoding="utf-8") as f:
+        with open((f"/mnt/c/users/marco/Documents/Università/III Anno/Tirocinio/linux_debian/service/prova/{str(double(last_timestamp))}.h5"), "w+", encoding="utf-8") as f:
             f.write("Stuff " + str(int(last_timestamp)))
         # check for permissions..
 
@@ -22,4 +23,3 @@ for i in range(60):
     except EOFError:
         pass
     time.sleep(0.6)
-print("BB")
