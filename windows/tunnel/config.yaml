@@ -3,17 +3,17 @@ socket:
   ip: 172.17.69.255 #testing purposes
   port: 22
 data_window:
-  channels_start: 150
-  channels_end: 300
+  channels_start: 0
+  channels_end: 842
   overlap: 0
   location: "Niscemi"
 credentials:
   user: marco
   passwd: marco
 paths:
-  path_server: /mnt/c/users/marco/Documents/Università/III Anno/Tirocinio/linux_debian/service
-  path_local: C:/Users/marco/Documents/Università/III Anno/Tirocinio/prova_copia
-  server_save_dir: prova
-  local_save_dir: prova
-extension: .txt
+  path_server: /mnt/c/users/marco/Documents/Università/III_Anno/Tirocinio/linux_debian/service
+  path_local: C:/Users/marco/Documents/Università/III_Anno/Tirocinio/windows/tunnel/prova
+  server_save_dir: data
+  complete_local_save_dir: complete_data
+extension: .h5
 server_script_name: server_test_ssh.py
