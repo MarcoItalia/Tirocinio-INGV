@@ -1,12 +1,10 @@
 from netCDF4 import Dataset  # pylint: disable=no-name-in-module
+from os import replace
 import numpy as np
-import os
 import config_manager
 
 CONFIG = config_manager.yaml_read("config.yaml")
 OVERLAP = CONFIG.data_window.overlap  # config
-if OVERLAP == 0:
-    OVERLAP = 1
 CHANNEL_START = CONFIG.data_window.channels_start  # config
 CHANNEL_END = CONFIG.data_window.channels_end  # config
 LOCATION = CONFIG.data_window.location  # config
@@ -81,6 +79,24 @@ def _initialize(dataset_instance, dataset, timestamp, dt):
         dataset_shape0, dataset_shape1, dataset_shape2))
 
 
+def _asign(dataset_write, dataset_read, position):
+    if OVERLAP > 0:
+        if dataset_read.ndim == 2:
+            dataset_write[position, :, :] = dataset_read[:-OVERLAP,
+                                                         CHANNEL_START:CHANNEL_END+1]
+        else:
+            dataset_write[position:, :, :] = dataset_read[:,
+                                                          :-OVERLAP, CHANNEL_START:CHANNEL_END+1]
+    else:
+        if dataset_read.ndim == 2:
+            dataset_write[position, :, :] = dataset_read[:,
+                                                         CHANNEL_START:CHANNEL_END+1]
+        else:
+            dataset_write[position:, :, :] = dataset_read[:,
+                                                          :, CHANNEL_START:CHANNEL_END+1]
+    return dataset_write
+
+
 def h5_file_write(path_netcdf, dataset, timestamp, dt, position: int = 0):
     """Write h5 file from the path or Dataset. The format is specific, Group-> Dataset | Attributes"""
     if isinstance(path_netcdf, str):
@@ -103,13 +119,8 @@ def h5_file_write(path_netcdf, dataset, timestamp, dt, position: int = 0):
 
     write_dataset = write_grp1.variables["StrainRate"]
 
-    if dataset.ndim == 2:
-        write_dataset[position, :, :] = dataset[:-OVERLAP,
-                                                CHANNEL_START:CHANNEL_END+1]
-    else:
-        write_dataset[position:, :, :] = dataset[:,
-                                                 :-OVERLAP, CHANNEL_START:CHANNEL_END+1]
+    write_dataset = _asign(write_dataset, dataset, position)
 
     if isinstance(path_netcdf, str):
         file_write.close()
-        os.replace(path_netcdf, f"{path_netcdf}.h5")
+        replace(path_netcdf, f"{path_netcdf}.h5")
