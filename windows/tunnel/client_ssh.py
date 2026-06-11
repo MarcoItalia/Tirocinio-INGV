@@ -3,7 +3,6 @@ from os import rename, mkdir
 from time import sleep
 import paramiko
 import script_manager
-import timestamp_manager
 from config_manager import yaml_read
 
 config = yaml_read("config.yaml")
@@ -154,7 +153,6 @@ while True:  # true
 
         print(f"Read {file_list[0]}")
         consecutive_fails = 0
-        timestamp_manager.save_last_timestamp(double(file_name))
         sftp_session.remove(
             f"{PATH_SERVER}/{SERVER_DIR_NAME}/{file_list[0]}")
 

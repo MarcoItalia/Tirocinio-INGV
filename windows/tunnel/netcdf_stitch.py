@@ -1,8 +1,8 @@
-from netCDF4 import Dataset  # pylint: disable=no-name-in-module
-from datetime import datetime
-from numpy import double
+from os import path, listdir, remove, replace, mkdir
 from time import sleep
-from os import listdir, path, remove, replace, mkdir
+from datetime import datetime
+from netCDF4 import Dataset  # pylint: disable=no-name-in-module
+from numpy import double
 import netcdf4_h5_manager
 import config_manager
 
@@ -10,13 +10,14 @@ config = config_manager.yaml_read("config.yaml")
 
 FILE_EXT = config.extension
 PATH_DATA = config.paths.path_local + "/"
-PATH_TO_SAVE = PATH_DATA + "/" + config.paths.complete_local_save_dir + "/"
+PATH_TO_SAVE = PATH_DATA + config.paths.complete_local_save_dir + "/"
 
 # mkdir if it doesn't exist
 try:
     mkdir(PATH_TO_SAVE)
 except FileExistsError:
     pass
+
 
 while True:
 
@@ -35,10 +36,13 @@ while True:
         sleep(0.5)
 
     print(f"\nStitching {timestamp}\n")
+
     date = datetime.fromtimestamp(double(timestamp))
     with Dataset(f"{PATH_TO_SAVE}CL_{date.strftime('%Y%m%d-%H%M%S')}", 'w') as file_write:
+
         fail_count = 0
         i = 0
+
         while i < 60:
             try:
                 file_path = path.join(
@@ -50,11 +54,13 @@ while True:
                         file_write, dataset_to_copy, timestamp, netcdf4_h5_manager.read_attribute(file_read, "dt"), position=i)
                     i += 1
                     fail_count = 0
+
                 try:
                     remove(file_path)
                 except FileNotFoundError as e:
                     print(f"File {double(timestamp)+i-1}{FILE_EXT} not found.")
                     print(f"Exception: {e}\n")
+
             except FileNotFoundError as e:
                 print(f"File {double(timestamp)+i}{FILE_EXT} not found")
                 print(f"Exception: {e}\n")
