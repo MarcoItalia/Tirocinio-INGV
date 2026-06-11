@@ -4,9 +4,9 @@ from datetime import datetime
 from netCDF4 import Dataset  # pylint: disable=no-name-in-module
 from numpy import double
 import netcdf4_h5_manager
-import config_manager
+from config_manager import yaml_read
 
-config = config_manager.yaml_read("config.yaml")
+config = yaml_read("config.yaml")
 
 FILE_EXT = config.extension
 PATH_DATA = config.paths.path_local + "/"

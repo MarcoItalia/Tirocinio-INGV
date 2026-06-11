@@ -1,9 +1,10 @@
-from numpy import double
 from os import rename, mkdir
 from time import sleep
+from numpy import double
+from config_manager import yaml_read
 import paramiko
 import script_manager
-from config_manager import yaml_read
+
 
 config = yaml_read("config.yaml")
 
