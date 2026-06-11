@@ -1,7 +1,7 @@
 #directory
 Script_esempio/
 prova_*
-test/*
+test/
 
 #file nascosti, prevalentemente cache
 __*
