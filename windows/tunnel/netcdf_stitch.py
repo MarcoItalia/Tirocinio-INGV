@@ -1,6 +1,6 @@
 from os import path, listdir, remove, replace, mkdir
 from time import sleep
-from datetime import datetime
+from datetime import datetime, timezone
 from netCDF4 import Dataset  # pylint: disable=no-name-in-module
 from numpy import double
 import netcdf4_h5_manager
@@ -10,7 +10,7 @@ config = yaml_read("config.yaml")
 
 FILE_EXT = config.extension
 PATH_DATA = config.paths.path_local + "/"
-PATH_TO_SAVE = PATH_DATA + config.paths.complete_local_save_dir + "/"
+PATH_TO_SAVE = config.paths.complete_local_save_dir + "/"
 
 # mkdir if it doesn't exist
 try:
@@ -37,8 +37,8 @@ while True:
 
     print(f"\nStitching {timestamp}\n")
 
-    date = datetime.fromtimestamp(double(timestamp))
-    with Dataset(f"{PATH_TO_SAVE}CL_{date.strftime('%Y%m%d-%H%M%S')}", 'w') as file_write:
+    date = datetime.fromtimestamp(double(timestamp), tz=timezone.utc)
+    with Dataset(f"{PATH_TO_SAVE}download_incomplete.tmp", 'w') as file_write:
 
         fail_count = 0
         i = 0
@@ -48,10 +48,12 @@ while True:
                 file_path = path.join(
                     PATH_DATA, f"{double(timestamp)+i}{FILE_EXT}")
                 with Dataset(file_path, 'r') as file_read:
+                    prefix = netcdf4_h5_manager.read_attribute(
+                        file_read, "Location")
                     dataset_to_copy = netcdf4_h5_manager.read_first_variable(
                         file_read)
                     netcdf4_h5_manager.h5_file_write(
-                        file_write, dataset_to_copy, timestamp, netcdf4_h5_manager.read_attribute(file_read, "dt"), position=i)
+                        file_write, dataset_to_copy, timestamp, netcdf4_h5_manager.read_attribute(file_read, "dt_millisec"), position=i)
                     i += 1
                     fail_count = 0
 
@@ -62,13 +64,16 @@ while True:
                     print(f"Exception: {e}\n")
 
             except FileNotFoundError as e:
-                print(f"File {double(timestamp)+i}{FILE_EXT} not found")
-                print(f"Exception: {e}\n")
+                print(f"File {double(timestamp)+i}{FILE_EXT} not found.")
                 if fail_count < 10:
+                    print("Waiting for file..")
                     fail_count += 1
                     sleep(0.5)
                 else:
+                    print("Searching for new start.\n")
                     break
-
-    replace(f"{PATH_TO_SAVE}CL_{date.strftime('%Y%m%d-%H%M%S')}",
-            f"{PATH_TO_SAVE}CL_{date.strftime('%Y%m%d-%H%M%S')}.h5")
+    if len(prefix >= 3):
+        prefix = prefix[0:3]
+    prefix = str(prefix).upper()
+    replace(f"{PATH_TO_SAVE}download_incomplete.tmp",
+            f"{PATH_TO_SAVE}{prefix}_{date.strftime('%Y%m%d-%H%M%S')}.h5")
