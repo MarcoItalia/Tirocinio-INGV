@@ -9,7 +9,7 @@ import zmq
 import config_manager
 
 
-# CONFIG
+# ── Config reader ──────────────────────────────
 config = config_manager.yaml_read("config.yaml")
 SAVE_PATH = config.data_dir.save_path
 PORT = config.socket.port
@@ -18,29 +18,30 @@ PROTOCOL = config.socket.protocol
 QUEUE_DIM = config.data_dir.queue_dim
 SOCKET_STR = f"{PROTOCOL}://{IP_ADDRESS}:{PORT}"
 
-# CREATE DIR, if exist ignore the error
+# ── mkdir to store the downloaded files ──────────────────────────────
 try:
     mkdir(SAVE_PATH)
 except FileExistsError:
     pass
 
-# ZMQ INITIALIZATION
-# ZMQ connection
+# ── ZMQ initialization ──────────────────────────────
+# connection
 context = zmq.Context()
 socket = context.socket(zmq.REQ)
 socket.connect(SOCKET_STR)
-# ZMQ REQ/REP
+print(f"Connection started with {IP_ADDRESS}")
+# send request and recive 3 packets (see documentation)
 socket.send(read_timestamp())
 message1 = socket.recv()
 message2 = socket.recv()
-print(f"Connection started with {IP_ADDRESS}")
 
-# DATA INITIALIZATION
-# Getting information
+# ── Data initialization ──────────────────────────────
+# Extractin information from packets
 data1 = array('i', message1[0:4])
 COUNT = data1[0]
 data1 = array('d', message1[4:])
 TimeStamp = data1[0]
+# TimeStamp -= double(0.5)
 print(f"Recived data {datetime.fromtimestamp(TimeStamp, tz=timezone.utc)}")
 if COUNT == 1:
     data2 = array('d', message2[0:48])
@@ -68,18 +69,14 @@ if len(filenames) < QUEUE_DIM:
 else:
     print(
         f"Queue Full, lost {datetime.fromtimestamp(TimeStamp, tz=timezone.utc)} data")
-
+# TimeStamp += double(0.5)
 save_last_timestamp(TimeStamp)
 
 
-i = 0
 # CONTINOUS COLLECTION
-# controllare che la connessione sia valida se da errore
 while True:
 
-    print()
     # ZMQ REQ/REP
-    # reconnect ?
     socket.send(double(TimeStamp))
     message1 = socket.recv()
     message2 = socket.recv()
@@ -94,11 +91,12 @@ while True:
     Size_Frequence = data2[3]-data2[2]  # frequences
 
     data1 = array('d', message1[4:])
-    print(f"Recived data {datetime.fromtimestamp(TimeStamp, tz=timezone.utc)}")
+    print(
+        f"\nRecived data {datetime.fromtimestamp(TimeStamp, tz=timezone.utc)}")
 
     if TimeStamp < data1[0]:
-        i += 1
         TimeStamp = data1[0]
+        # TimeStamp -= double(0.5)
 
         data3 = array('f', message3)
         StrainRate = reshape(data3, (Size_Frequence + 1, Size_Dist+1))
@@ -110,5 +108,5 @@ while True:
         else:
             print(
                 f"Queue Full, lost {datetime.fromtimestamp(TimeStamp, tz=timezone.utc)} data")
-
+        # TimeStamp += double(0.5)
         save_last_timestamp(TimeStamp)
