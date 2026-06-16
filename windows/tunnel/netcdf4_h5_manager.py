@@ -124,10 +124,11 @@ class H5Stitcher:
 
         if not self.initialized:
             self._initialize(dataset, timestamp, dt, src_channel_start)
-        else:
-            self._accumulate_dt(dt)
+        # else:
+        #    self._accumulate_dt(dt)
 
         self._assign(dataset)
+        # self.position += dataset.shape[0]
         self.position += 1
 
     # ── Internals ─────────────────────────────────────────────────────────────
@@ -188,12 +189,20 @@ class H5Stitcher:
         else:
             n_freq = dataset.shape[1] - self.overlap
 
+        # if check_for_dim == 2:
+        #   no time
+        #   freq_dim = self.group.createDimension("Frequences", None)
         time_dim = self.group.createDimension("Time", None)
         freq_dim = self.group.createDimension("Frequences", n_freq)
         chan_dim = self.group.createDimension(
             "Channels", self.channel_end - self.channel_start
         )
-
+        # if check_for_dim ==2:
+        # self.variable = self.group.createVariable(
+        #    "StrainRate",
+        #    datatype="float32",
+        #    dimensions=(freq_dim, chan_dim),
+        # )
         self.variable = self.group.createVariable(
             "StrainRate",
             datatype="float32",
@@ -202,9 +211,9 @@ class H5Stitcher:
 
         self.initialized = True
 
-    def _accumulate_dt(self, dt) -> None:
-        current = np.short(self.group.getncattr("dt_millisec"))
-        self.group.setncattr("dt_millisec", current + np.short(dt))
+    # def _accumulate_dt(self, dt) -> None:
+    #    current = np.short(self.group.getncattr("dt_millisec"))
+    #    self.group.setncattr("dt_millisec", current + np.short(dt))
 
     def _assign(self, dataset) -> None:
         ch = slice(self.channel_start, self.channel_end)
@@ -216,4 +225,5 @@ class H5Stitcher:
             data = dataset[0, :-self.overlap,
                            ch] if self.overlap > 0 else dataset[0, :, ch]
 
+        # self.variable[self.position:, : ] = data
         self.variable[self.position, :, :] = data
