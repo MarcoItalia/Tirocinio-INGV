@@ -1,0 +1,21 @@
+socket:
+  protocol: tcp #must stay tcp
+  ip: 172.17.69.255 #testing purposes
+  port: 22
+data_window:
+  channels_start: 160
+  channels_end: 290
+  overlap: 10
+  location: "Niscemi"
+  leave_file_untouched: False
+  seconds_to_aggregate: 60
+credentials:
+  user: marco
+  passwd: marco
+paths:
+  path_server: /mnt/c/users/marco/Documents/Universita/III_Anno/Tirocinio/linux_debian/service # must not inlcude the directory where the data will be found
+  path_local: C:/temp # must include the directory where the data will be saved
+  server_save_dir: data # server dir where you will find the data
+  complete_local_save_dir: C:/temp/complete_data # local dir where the data will be grouped together
+extension: .h5
+server_script_name: ZMQ_data_collector.py
