@@ -7,6 +7,18 @@ CHANNEL_START = 150
 CHANNEL_END = 300
 
 
+def read_variable(group, var_search: str) -> Dataset:
+    """Recursive read of .h5 group, until it finds a variable"""
+    try:
+        return group.variables[var_search]
+    except KeyError:
+        for grp in group.groups.values():
+            result = read_variable(grp, var_search)
+            if result is not None:
+                return result
+        return None
+
+
 file_read = Dataset(
     "SR_DS_GL20_production_2026-03-01_12-00-29_UTC.h5", 'r')
 file_write = Dataset("try3", 'w')
@@ -23,7 +35,7 @@ read_grp3 = read_grp2.groups[list(read_grp2.groups.keys())[0]]
 read_grp4 = read_grp3.groups[list(read_grp3.groups.keys())[0]]
 read_dataset = read_grp4.variables.get("Strain Rate [nStrain|s]")
 
-write_dataset = write_grp1.createVariable("Strain Rate Dataset", datatype="float32", dimensions=(
+write_dataset = write_grp1.createVariable("StrainRate", datatype="float32", dimensions=(
     dataset_shape0, dataset_shape1, dataset_shape2))
 write_dataset[:, :, :] = read_dataset[:,
                                       :FREQUENCES, CHANNEL_START:CHANNEL_END+1]
@@ -38,3 +50,6 @@ file_read.close()
 file_write.close()
 
 os.replace("try3", "try3.h5")
+
+with Dataset("try3.h5", 'r') as file_read:
+    print(read_variable(file_read, "StrainRate"))

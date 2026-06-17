@@ -2,9 +2,10 @@ from netCDF4 import Dataset  # pylint: disable=no-name-in-module
 import numpy as np
 import os
 
-FREQUENCES = 520
+FREQUENCES = 525
+OVERLAP = 20
 CHANNEL_START = 150
-CHANNEL_END = 300
+CHANNEL_END = 300 + 1
 
 
 file_read = Dataset(
@@ -20,18 +21,19 @@ for i in range(read_dataset.shape[0]):
     file_write = Dataset(f"{i}.0.h5", 'w')
     write_grp1 = file_write.createGroup("dataset")
     dataset_shape0 = write_grp1.createDimension("Time", None)
-    dataset_shape1 = write_grp1.createDimension("Frequences", FREQUENCES)
+    dataset_shape1 = write_grp1.createDimension(
+        "Frequences", FREQUENCES - OVERLAP)
     dataset_shape2 = write_grp1.createDimension(
-        "Channels", None)
+        "Channels", CHANNEL_END - CHANNEL_START)
     write_dataset = write_grp1.createVariable("StrainRate", datatype="float32", dimensions=(
         dataset_shape0, dataset_shape1, dataset_shape2))
     write_dataset[0, :, :] = read_dataset[i,
-                                          :FREQUENCES, :]
+                                          :-OVERLAP, CHANNEL_START:CHANNEL_END]
     write_grp1.setncattr("Timestamp", read_grp4.getncattr("AcqStartTime"))
     write_grp1.setncattr("Channel_start", np.short(CHANNEL_START))
     write_grp1.setncattr("Channel_end", np.short(CHANNEL_END))
     write_grp1.setncattr("Location", "Niscemi")
-    write_grp1.setncattr("dt", 5)
+    write_grp1.setncattr("dt_millisec", 5)
 
     file_write.close()
 

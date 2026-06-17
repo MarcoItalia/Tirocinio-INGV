@@ -10,13 +10,12 @@ CHANNEL_END = 300
 
 file_write = Dataset(
     "try4", 'w')
-# list((list((list(file_read.groups.keys())[0]).groups.keys())[0]).groups.keys())[0]
 write_grp1 = file_write.createGroup("dataset")
 dataset_shape0 = write_grp1.createDimension("Time", None)
 dataset_shape1 = write_grp1.createDimension("Frequences", FREQUENCES)
 dataset_shape2 = write_grp1.createDimension(
     "Channels", CHANNEL_END + 1 - CHANNEL_START)
-write_dataset = write_grp1.createVariable("Strain Rate Dataset", datatype="float32", dimensions=(
+write_dataset = write_grp1.createVariable("StrainRate", datatype="float32", dimensions=(
     dataset_shape0, dataset_shape1, dataset_shape2))
 
 
