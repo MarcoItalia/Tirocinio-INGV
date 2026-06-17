@@ -24,11 +24,6 @@ PATH_TO_SAVE = config.paths.complete_local_save_dir + "/"
 FILES_PER_STITCH = config.data_window.seconds_to_aggregate
 MAX_CONSECUTIVE_FAILS = 10
 
-try:
-    mkdir(PATH_TO_SAVE)
-except FileExistsError:
-    pass
-
 
 def wait_for_first_file() -> str:
     """Block until at least one matching file appears; return its timestamp string."""
@@ -100,6 +95,12 @@ def stitch(timestamp_str: str) -> None:
 
 
 def main() -> None:
+
+    try:
+        mkdir(PATH_TO_SAVE)
+    except FileExistsError:
+        pass
+
     while True:
         timestamp_str = wait_for_first_file()
         print(f"\nStitching {timestamp_str}\n")

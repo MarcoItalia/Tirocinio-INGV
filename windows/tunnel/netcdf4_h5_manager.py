@@ -1,3 +1,4 @@
+from os import replace
 from netCDF4 import Dataset  # pylint: disable=no-name-in-module
 import numpy as np
 import config_manager
@@ -123,7 +124,7 @@ class H5Stitcher:
             src_channel_start = None  # not needed again
 
         if not self.initialized:
-            self._initialize(dataset, timestamp, dt, src_channel_start)
+            self._initialize(timestamp, dt, src_channel_start)
 
         written_lines = self._assign(dataset)
         self.position += written_lines
@@ -166,7 +167,7 @@ class H5Stitcher:
         self.channel_start = local_start
         self.channel_end = local_end
 
-    def _initialize(self, dataset, timestamp, dt, src_channel_start) -> None:
+    def _initialize(self, timestamp, dt, src_channel_start) -> None:
         # translate local slicing indices back into absolute channel numbers
         # using the source chunk's own Channel_start attribute
         src_start = int(
@@ -206,3 +207,27 @@ class H5Stitcher:
         self.variable[self.position: self.position +
                       data.shape[0], :] = data
         return data.shape[0]
+
+# ── Compatibility Wrapper ────────────────────────────────────────────────────────────────────
+
+
+def h5_file_write(path_netcdf, file_read, timestamp, dt):
+    """
+    Backward-compatible single-shot writer.
+    """
+    if isinstance(path_netcdf, str):
+        pos_ext = path_netcdf.find(".h5")
+        if pos_ext != -1:
+            path_netcdf = path_netcdf[:pos_ext]
+        file_write = Dataset("temp_file.tmp", "w")
+    elif isinstance(path_netcdf, Dataset):
+        file_write = path_netcdf
+    else:
+        raise ValueError
+
+    stitcher = H5Stitcher(file_write)
+    stitcher.append(file_read, timestamp, dt)
+
+    if isinstance(path_netcdf, str):
+        file_write.close()
+        replace("temp_file.tmp", f"{path_netcdf}.h5")
