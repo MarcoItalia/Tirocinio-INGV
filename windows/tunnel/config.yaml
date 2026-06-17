@@ -7,7 +7,7 @@ data_window:
   channels_end: 290
   overlap: 10
   location: "Niscemi"
-  leave_file_untouched: False
+  leave_file_untouched: True
   seconds_to_aggregate: 60
 credentials:
   user: marco

@@ -125,9 +125,8 @@ class H5Stitcher:
         if not self.initialized:
             self._initialize(dataset, timestamp, dt, src_channel_start)
 
-        self._assign(dataset)
-        # self.position += dataset.shape[0]
-        self.position += 1
+        written_lines = self._assign(dataset)
+        self.position += written_lines
 
     # ── Internals ─────────────────────────────────────────────────────────────
 
@@ -182,36 +181,17 @@ class H5Stitcher:
         self.group.setncattr("Location", self.location)
         self.group.setncattr("dt_millisec", np.short(dt))
 
-        if dataset.ndim == 2:
-            n_freq = dataset.shape[0] - self.overlap
-        else:
-            n_freq = dataset.shape[1] - self.overlap
-
-        # if check_for_dim == 2:
-        #   no time
-        #   freq_dim = self.group.createDimension("Frequences", None)
-        time_dim = self.group.createDimension("Time", None)
-        freq_dim = self.group.createDimension("Frequences", n_freq)
+        freq_dim = self.group.createDimension("Frequences", None)
         chan_dim = self.group.createDimension(
             "Channels", self.channel_end - self.channel_start
         )
-        # if check_for_dim ==2:
-        # self.variable = self.group.createVariable(
-        #    "StrainRate",
-        #    datatype="float32",
-        #    dimensions=(freq_dim, chan_dim),
-        # )
+
         self.variable = self.group.createVariable(
             "StrainRate",
             datatype="float32",
-            dimensions=(time_dim, freq_dim, chan_dim),
+            dimensions=(freq_dim, chan_dim),
         )
-
         self.initialized = True
-
-    # def _accumulate_dt(self, dt) -> None:
-    #    current = np.short(self.group.getncattr("dt_millisec"))
-    #    self.group.setncattr("dt_millisec", current + np.short(dt))
 
     def _assign(self, dataset) -> None:
         ch = slice(self.channel_start, self.channel_end)
@@ -223,5 +203,6 @@ class H5Stitcher:
             data = dataset[0, :-self.overlap,
                            ch] if self.overlap > 0 else dataset[0, :, ch]
 
-        # self.variable[self.position:, : ] = data
-        self.variable[self.position, :, :] = data
+        self.variable[self.position: self.position +
+                      data.shape[0], :] = data
+        return data.shape[0]
