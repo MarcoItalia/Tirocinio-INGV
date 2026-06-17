@@ -1,18 +1,9 @@
 #directory
 Script_esempio/
 prova_*
-<<<<<<< HEAD
-=======
-test/
->>>>>>> feat/first-connection
 
 #file nascosti, prevalentemente cache
 __*
 
 #type of file
-<<<<<<< HEAD
 *.h5
-=======
-*.h5
-*.env*
->>>>>>> feat/first-connection
