@@ -8,6 +8,7 @@ data_window:
   overlap: 10
   location: "Niscemi"
   leave_file_untouched: False
+  seconds_to_aggregate: 60
 credentials:
   user: marco
   passwd: marco

@@ -21,7 +21,7 @@ FILE_EXT = config.extension
 PATH_DATA = config.paths.path_local + "/"
 PATH_TO_SAVE = config.paths.complete_local_save_dir + "/"
 
-FILES_PER_STITCH = 60
+FILES_PER_STITCH = config.data_window.seconds_to_aggregate
 MAX_CONSECUTIVE_FAILS = 10
 
 try:
@@ -55,14 +55,20 @@ def stitch(timestamp_str: str) -> None:
 
         fail_count = 0
         i = 0
+        dt_to_aggregate = 0
 
         while i < FILES_PER_STITCH:
             file_path = path.join(PATH_DATA, f"{timestamp + i}{FILE_EXT}")
 
             try:
                 with Dataset(file_path, "r") as file_read:
-                    prefix = read_attribute(file_read, "Location")
                     dt = read_attribute(file_read, "dt_millisec")
+                    if i == 0:
+                        dt_to_aggregate = dt
+                        prefix = read_attribute(file_read, "Location")
+                    elif dt != dt_to_aggregate:
+                        break
+
                     stitcher.append(file_read, timestamp, dt)
 
                 i += 1

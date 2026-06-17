@@ -124,8 +124,6 @@ class H5Stitcher:
 
         if not self.initialized:
             self._initialize(dataset, timestamp, dt, src_channel_start)
-        # else:
-        #    self._accumulate_dt(dt)
 
         self._assign(dataset)
         # self.position += dataset.shape[0]

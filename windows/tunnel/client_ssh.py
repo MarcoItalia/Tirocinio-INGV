@@ -39,7 +39,7 @@ def file_list_from_path(path_to_list: str = None) -> list:
     return [f for f in files]
 
 
-def up_file(list_last_timestamp, consecutive_fails) -> list:
+def up_file(list_last_timestamp, fails) -> list:
     """
     Check if the passed list as other elements. If it's True, than return the list minus the first element.
     If the list has no elements, then return it. If the list as just one element and have not yet failed, that
@@ -49,7 +49,7 @@ def up_file(list_last_timestamp, consecutive_fails) -> list:
     ----------
     list_last_timestamp: list
         list of files that rapresent the files to check. It's the output of file_list_from_path or up_file or [].
-    consecutive_fails: int
+    fails: int
         number of times the current file has been checked and was not found. This is relevant because only the first fail
         the last file in the list is incremented. Incrementing each time will means just a waste of computation.        
     """
@@ -59,7 +59,7 @@ def up_file(list_last_timestamp, consecutive_fails) -> list:
     if len(list_last_timestamp) == 0:
         return []
     # increment
-    if consecutive_fails == 0:
+    if fails == 0:
         pos_ext = list_last_timestamp[0].find(FILE_EXT)
         if pos_ext != -1:
             file_name = list_last_timestamp[0]
@@ -71,7 +71,7 @@ def up_file(list_last_timestamp, consecutive_fails) -> list:
     return list_last_timestamp
 
 
-def get_next_file(path: str, list_last_timestamp, consecutive_fails) -> list:
+def get_next_file(path: str, list_last_timestamp, fails) -> list:
     """
     Return a list of ordered files from which the first element is the next
     that need to be downloaded. 
@@ -79,12 +79,14 @@ def get_next_file(path: str, list_last_timestamp, consecutive_fails) -> list:
     Parameters
     ----------
     path: str
-        absolute path. The function will pass this to file_list_from_path in the offchance it need to read the directory.
+        absolute path. The function will pass this to file_list_from_path in theoffchance it need to read the directory.
     list_last_timestamp: list
         list of files that rapresent the files to check. It's the output of file_list_from_path or up_file or [].
+    fails: int
+        number of fails to find a specific file.
     """
     # check if reset is needed
-    if len(list_last_timestamp) == 0 or consecutive_fails >= 2:
+    if len(list_last_timestamp) == 0 or fails >= 2:
         files = file_list_from_path(f"{path}")
         if files != []:
             print(f"Inizializing file list..  {files}")
@@ -94,7 +96,7 @@ def get_next_file(path: str, list_last_timestamp, consecutive_fails) -> list:
             return []
     # return the next to read
     else:
-        return up_file(list_last_timestamp, consecutive_fails)
+        return up_file(list_last_timestamp, fails)
 
 
 def connect(host_ip, host_port, usarname: str, password: str):
