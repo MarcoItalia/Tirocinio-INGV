@@ -11,6 +11,7 @@ import config_manager
 
 # ── Config reader ──────────────────────────────
 config = config_manager.yaml_read("config.yaml")
+
 SAVE_PATH = config.data_dir.save_path
 PORT = config.socket.port
 IP_ADDRESS = config.socket.ip
@@ -39,9 +40,11 @@ message2 = socket.recv()
 # Extractin information from packets
 data1 = array('i', message1[0:4])
 COUNT = data1[0]
+
 data1 = array('d', message1[4:])
 TimeStamp = data1[0]
-# TimeStamp -= double(0.5)
+TimeStamp -= double(0.5)
+
 print(f"Recived data {datetime.fromtimestamp(TimeStamp, tz=timezone.utc)}")
 if COUNT == 1:
     data2 = array('d', message2[0:48])
@@ -58,8 +61,10 @@ else:
     print("   ")
     print("Script stopped --->>>  Raw data is not a valid dataset")
     sys_exit()
+
 # Constructing data
 StrainRate = reshape(data3, (Size_Frequence + 1, Size_Dist + 1))
+
 # Writing data
 filenames = next(walk(SAVE_PATH), (None, None, []))[2]
 if len(filenames) < QUEUE_DIM:
@@ -69,7 +74,7 @@ if len(filenames) < QUEUE_DIM:
 else:
     print(
         f"Queue Full, lost {datetime.fromtimestamp(TimeStamp, tz=timezone.utc)} data")
-# TimeStamp += double(0.5)
+TimeStamp += double(0.5)
 save_last_timestamp(TimeStamp)
 
 
@@ -96,7 +101,7 @@ while True:
 
     if TimeStamp < data1[0]:
         TimeStamp = data1[0]
-        # TimeStamp -= double(0.5)
+        TimeStamp -= double(0.5)
 
         data3 = array('f', message3)
         StrainRate = reshape(data3, (Size_Frequence + 1, Size_Dist+1))
@@ -108,5 +113,6 @@ while True:
         else:
             print(
                 f"Queue Full, lost {datetime.fromtimestamp(TimeStamp, tz=timezone.utc)} data")
-        # TimeStamp += double(0.5)
+
+        TimeStamp += double(0.5)
         save_last_timestamp(TimeStamp)
