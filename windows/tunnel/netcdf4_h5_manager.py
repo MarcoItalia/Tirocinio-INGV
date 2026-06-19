@@ -182,7 +182,7 @@ class H5Stitcher:
         self.group.setncattr("Location", self.location)
         self.group.setncattr("dt_millisec", np.short(dt))
 
-        freq_dim = self.group.createDimension("Frequences", None)
+        time_dim = self.group.createDimension("Time", None)
         chan_dim = self.group.createDimension(
             "Channels", self.channel_end - self.channel_start
         )
@@ -190,7 +190,7 @@ class H5Stitcher:
         self.variable = self.group.createVariable(
             "StrainRate",
             datatype="float32",
-            dimensions=(freq_dim, chan_dim),
+            dimensions=(time_dim, chan_dim),
         )
         self.initialized = True
 

@@ -141,15 +141,18 @@ def main() -> None:
         sleep(1.5)  # sleep because of the delay
 
     # ── mkdir to store the downloaded files ──────────────────────────────
+
     try:
         mkdir(PATH_LOCAL)
     except FileExistsError:
         pass
 
     # ── Start a thread to stitch the downloaded file ──────────────────────────────
+
     t = Thread(target=netcdf_stitch.main,
                name="Stitch", daemon=False)
     t.start()
+
     # ── Download all the file in the directory ──────────────────────────────
 
     file_list = []
@@ -207,8 +210,8 @@ def main() -> None:
             file_list = get_next_file(sftp_session,
                                       f"{PATH_SERVER}/{SERVER_DIR_NAME}/", file_list, consecutive_fails)
 
-            # check if the list is []. It can happens when we download too fast that the list
-            # of files in the dir is still empty.
+            # check if the list is []. It can happens when we download (or start the script by program)
+            # too fast that the list of files in the dir is still empty.
             if len(file_list) == 0:
                 consecutive_fails += 1
                 print(f"Fail number: {consecutive_fails}")
@@ -217,6 +220,7 @@ def main() -> None:
             # check if the file is a .h5 file
             extension = (file_list[0]).find(FILE_EXT)
             if extension == -1:
+                # should be removed from the list, or else it will just fails 2 (or more) times in a row.
                 consecutive_fails += 1
                 continue
 
