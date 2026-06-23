@@ -17,5 +17,6 @@ paths:
   path_local: C:/temp # must include the directory where the data will be saved
   server_save_dir: data # server dir where you will find the data
   complete_local_save_dir: C:/temp/complete_data # local dir where the data will be grouped together
+  info_dir: C:/temp/info
 extension: .h5
 server_script_name: ZMQ_data_collector.py

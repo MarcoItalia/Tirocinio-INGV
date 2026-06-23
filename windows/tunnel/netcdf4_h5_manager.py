@@ -51,7 +51,7 @@ class H5Stitcher:
     ...             stitcher.append(file_read, timestamp, dt)
     """
 
-    def __init__(self, file_write: Dataset):
+    def __init__(self, file_write: Dataset, add_info: bool = False):
         """
         Parameters
         ----------
@@ -62,8 +62,11 @@ class H5Stitcher:
             of re-initialising.
         """
         self.file_write = file_write
-
+        self.info_config = {}
         config = config_manager.yaml_read("config.yaml")
+        if add_info:
+            self.info_config = vars(config_manager.yaml_read(
+                f"{config.paths.info_dir}/_add_info.yaml"))
         data_window = config.data_window
 
         self.leave_untouched = data_window.leave_file_untouched
@@ -181,6 +184,8 @@ class H5Stitcher:
         self.group.setncattr("Channel_end", np.short(abs_channel_end))
         self.group.setncattr("Location", self.location)
         self.group.setncattr("dt_millisec", np.short(dt))
+        for key, value in self.info_config.items():
+            self.group.setncattr(key, value)
 
         time_dim = self.group.createDimension("Time", None)
         chan_dim = self.group.createDimension(

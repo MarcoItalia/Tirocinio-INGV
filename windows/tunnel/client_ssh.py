@@ -20,6 +20,7 @@ PATH_SERVER = f"{config.paths.path_server}"
 PATH_LOCAL = config.paths.path_local
 SERVER_DIR_NAME = config.paths.server_save_dir
 SCRIPT_NAME = config.server_script_name
+INFO_PATH = config.paths.info_dir + "/" + "_add_info.yaml"
 
 
 # ── Support functions ──────────────────────────────
@@ -67,6 +68,8 @@ def up_file(list_last_timestamp, fails) -> list:
             print(f"Incrementing {file_name}")
             list_last_timestamp[0] = str(
                 double(file_name[:pos_ext])+1)+file_name[pos_ext:]
+        else:
+            return []
 
     # print(list_last_timestamp[0])
     return list_last_timestamp
@@ -220,12 +223,23 @@ def main() -> None:
             # check if the file is a .h5 file
             extension = (file_list[0]).find(FILE_EXT)
             if extension == -1:
-                # should be removed from the list, or else it will just fails 2 (or more) times in a row.
+
+                # check if the file is a .yaml file
+                extension = (file_list[0]).find(".yaml")
+                if extension == -1:
+                    # if it is, download it. Don't update consecutive_fails
+                    sftp_session.get(f"{PATH_SERVER}/{SERVER_DIR_NAME}/{file_list[0]}",
+                                     f"{INFO_PATH}/_temp_download_info")
+                    rename(f"{INFO_PATH}/_temp_download_info",
+                           f"{INFO_PATH}/{file_list[0]}")
+                    sftp_session.remove(
+                        f"{PATH_SERVER}/{SERVER_DIR_NAME}/{file_list[0]}")
+                    continue
                 consecutive_fails += 1
                 continue
 
             # ── Download the files and rename it ──────────────────────────────
-            # Rename is guranteed atomic, meanwhile get it is not if the file is too big.
+            # Rename is guranteed atomic, meanwhile get isn't if the file is too big.
             sftp_session.get(f"{PATH_SERVER}/{SERVER_DIR_NAME}/{file_list[0]}",
                              f"{PATH_LOCAL}/_temp_download_file")
             rename(f"{PATH_LOCAL}/_temp_download_file",

@@ -20,6 +20,7 @@ config = yaml_read("config.yaml")
 FILE_EXT = config.extension
 PATH_DATA = config.paths.path_local + "/"
 PATH_TO_SAVE = config.paths.complete_local_save_dir + "/"
+INFO_PATH = config.paths.info_dir + "/" + "_add_info.yaml"
 
 FILES_PER_STITCH = config.data_window.seconds_to_aggregate
 MAX_CONSECUTIVE_FAILS = 10
@@ -54,14 +55,18 @@ def stitch(timestamp_str: str) -> None:
 
         while i < FILES_PER_STITCH:
             file_path = path.join(PATH_DATA, f"{timestamp + i}{FILE_EXT}")
-
             try:
                 with Dataset(file_path, "r") as file_read:
                     dt = read_attribute(file_read, "dt_millisec")
                     if i == 0:
+                        # read info and put it in saved_dict
+                        add_info = (yaml_read(INFO_PATH))
                         dt_to_aggregate = dt
                         prefix = read_attribute(file_read, "Location")
                     elif dt != dt_to_aggregate:
+                        break
+                    # check if the info changed from the last time
+                    elif add_info != (yaml_read(INFO_PATH)):
                         break
 
                     stitcher.append(file_read, timestamp, dt)
