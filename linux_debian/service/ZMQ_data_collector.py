@@ -1,10 +1,12 @@
 from os import mkdir, walk
 from sys import exit as sys_exit
+from threading import Thread
 from datetime import datetime, timezone
 from array import array
 from numpy import reshape, double
 from netcdf4_h5_manager import h5_file_write
 from timestamp_manager import read_timestamp, save_last_timestamp
+import ssh_file_reader
 import zmq
 import config_manager
 
@@ -13,9 +15,9 @@ import config_manager
 config = config_manager.yaml_read("config.yaml")
 
 SAVE_PATH = config.data_dir.save_path
-PORT = config.socket.port
-IP_ADDRESS = config.socket.ip
-PROTOCOL = config.socket.protocol
+PORT = config.socket_zmq.port
+IP_ADDRESS = config.socket_zmq.ip
+PROTOCOL = config.socket_zmq.protocol
 QUEUE_DIM = config.data_dir.queue_dim
 SOCKET_STR = f"{PROTOCOL}://{IP_ADDRESS}:{PORT}"
 
@@ -24,6 +26,10 @@ try:
     mkdir(SAVE_PATH)
 except FileExistsError:
     pass
+
+t = Thread(target=ssh_file_reader.main,
+           name="Info_Supplier", daemon=False)
+t.start()
 
 # ── ZMQ initialization ──────────────────────────────
 # connection

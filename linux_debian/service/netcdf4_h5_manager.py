@@ -10,14 +10,6 @@ CHANNEL_END = CONFIG.data_window.channels_end  # config
 LOCATION = CONFIG.data_window.location  # config
 
 
-def h5_file_read(path_netcdf: str, callback):
-    """Return the first read variable"""
-    with Dataset(path_netcdf, 'r') as file_read:
-        var = read_first_variable(file_read)
-        if var is not None:
-            return callback(var)
-
-
 def read_first_variable(group) -> Dataset:
     """Recursive read of .h5 group, until it finds a variable"""
     if group.variables:
@@ -29,32 +21,16 @@ def read_first_variable(group) -> Dataset:
     return None
 
 
-def process(var):
-    """Callback function, doesn't do much outside"""
-    return var[:, :, ]
-
-
-def read_attribute(path_netcdf, attr: str = "dt"):
-    """Read attribute passed in the function"""
-
-    if isinstance(path_netcdf, str):
-        with Dataset(path_netcdf, 'r') as file_read:
-            for group in file_read.groups.values():
-                try:
-                    attr_value = group.getncattr(attr)
-                    return attr_value
-                except AttributeError:
-                    pass
-            return None
-    elif isinstance(path_netcdf, Dataset):
-        for group in path_netcdf.groups.values():
-            try:
-                attr_value = group.getncattr(attr)
-                return attr_value
-            except AttributeError:
-                pass
+def read_attribute(group, var_search: str) -> Dataset:
+    """Recursive read of .h5 group, until it finds a specific attribute"""
+    try:
+        return group.getncattr(var_search)
+    except AttributeError:
+        for grp in group.groups.values():
+            result = read_attribute(grp, var_search)
+            if result is not None:
+                return result
         return None
-    return None
 
 
 def _initialize(dataset_instance, dataset, timestamp, dt):
