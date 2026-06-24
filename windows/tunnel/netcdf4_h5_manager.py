@@ -45,8 +45,8 @@ class H5Stitcher:
     Usage
     -----
     >>> with Dataset("download_incomplete.tmp", "w") as file_write:
-    ...     stitcher = H5Stitcher(file_write)
-    ...     for file_path in chunk_paths:
+    ...     stitcher = H5Stitcher(file_write, True)
+    ...     for file_path in list_file_dir:
     ...         with Dataset(file_path, "r") as file_read:
     ...             stitcher.append(file_read, timestamp, dt)
     """

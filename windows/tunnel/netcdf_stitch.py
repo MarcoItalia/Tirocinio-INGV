@@ -47,7 +47,7 @@ def stitch(timestamp_str: str) -> None:
     prefix = "UNK"
 
     with Dataset(tmp_path, "w") as file_write:
-        stitcher = H5Stitcher(file_write)
+        stitcher = H5Stitcher(file_write, True)
 
         fail_count = 0
         i = 0

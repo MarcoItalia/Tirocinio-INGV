@@ -1,4 +1,4 @@
-from os import rename, mkdir
+from os import rename, mkdir, remove
 from time import sleep
 from threading import Thread
 from numpy import double
@@ -230,8 +230,13 @@ def main() -> None:
                     # if it is, download it. Don't update consecutive_fails
                     sftp_session.get(f"{PATH_SERVER}/{SERVER_DIR_NAME}/{file_list[0]}",
                                      f"{INFO_PATH}/_temp_download_info")
-                    rename(f"{INFO_PATH}/_temp_download_info",
-                           f"{INFO_PATH}/{file_list[0]}")
+                    try:
+                        rename(f"{INFO_PATH}/_temp_download_info",
+                               f"{INFO_PATH}/{file_list[0]}")
+                    except WindowsError:
+                        remove(f"{INFO_PATH}/{file_list[0]}")
+                        rename(f"{INFO_PATH}/_temp_download_info",
+                               f"{INFO_PATH}/{file_list[0]}")
                     sftp_session.remove(
                         f"{PATH_SERVER}/{SERVER_DIR_NAME}/{file_list[0]}")
                     continue
