@@ -2,7 +2,7 @@ from os import replace, remove, mkdir
 from shutil import copyfile
 from time import sleep
 from netCDF4 import Dataset  # pylint: disable=no-name-in-module
-from config_manager import yaml_read, yaml_write_dict
+from yaml_manager import yaml_read, yaml_write_dict
 from netcdf4_h5_manager import read_attribute
 import paramiko
 
@@ -58,7 +58,7 @@ def file_list_from_path(sftp_session, path_to_list: str = None) -> list:
     return [f for f in files]
 
 
-def info_dict(path: str) -> dict:
+def extract_info_dict(path: str) -> dict:
     """Read a .h5 file from the passed variable path.
     Return a dictionary with the info with key from the config and value 
     from the read file."""
@@ -119,7 +119,7 @@ def main() -> None:
                 client_session, sftp_session = connect(
                     IP_ADDRESS, PORT, USERNAME, PASSWORD)
 
-        supplement_data = info_dict(f"{CONFIG_PATH}/{last_file}")
+        supplement_data = extract_info_dict(f"{CONFIG_PATH}/{last_file}")
         try:
             if supplement_data != yaml_read(f"{CONFIG_PATH}/_add_info.yaml"):
                 yaml_write_dict(supplement_data,

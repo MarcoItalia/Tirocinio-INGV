@@ -1,11 +1,3 @@
-"""
-netcdf_stitch.py
------------------
-Watches a local directory for per-second HDF5 files produced by the
-acquisition server, stitches up to 60 of them into a single output file
-using H5Stitcher, then removes the originals.
-"""
-
 from os import path, listdir, remove, replace, mkdir
 from time import sleep
 from datetime import datetime, timezone
@@ -13,7 +5,7 @@ from netCDF4 import Dataset  # pylint: disable=no-name-in-module
 from numpy import double
 
 from netcdf4_h5_manager import H5Stitcher, read_attribute
-from config_manager import yaml_read
+from yaml_manager import yaml_read
 
 config = yaml_read("config.yaml")
 
@@ -60,7 +52,7 @@ def stitch(timestamp_str: str) -> None:
                     dt = read_attribute(file_read, "dt_millisec")
                     if i == 0:
                         # read info and put it in saved_dict
-                        add_info = (yaml_read(INFO_PATH))
+                        add_info = yaml_read(INFO_PATH)
                         dt_to_aggregate = dt
                         prefix = read_attribute(file_read, "Location")
                     elif dt != dt_to_aggregate:
@@ -96,10 +88,17 @@ def stitch(timestamp_str: str) -> None:
     prefix = prefix.upper()
     out_name = f"{PATH_TO_SAVE}{prefix}_{date.strftime('%Y%m%d-%H%M%S')}.h5"
     replace(tmp_path, out_name)
-    print(f"Output written → {out_name}")
+    print(f"Output written: {out_name}")
 
 
 def main() -> None:
+    """
+    netcdf_stitch.py
+    -----------------
+    Watches a local directory for per-second HDF5 files produced by the
+    acquisition server, stitches up to 60 of them into a single output file
+    using H5Stitcher, then removes the originals.
+    """
 
     try:
         mkdir(PATH_TO_SAVE)

@@ -2,7 +2,7 @@ from os import rename, mkdir, remove
 from time import sleep
 from threading import Thread
 from numpy import double
-from config_manager import yaml_read
+from yaml_manager import yaml_read
 import paramiko
 import netcdf_stitch
 import script_manager

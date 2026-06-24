@@ -8,11 +8,11 @@ from netcdf4_h5_manager import h5_file_write
 from timestamp_manager import read_timestamp, save_last_timestamp
 import ssh_file_reader
 import zmq
-import config_manager
+from yaml_manager import yaml_read
 
 
 # ── Config reader ──────────────────────────────
-config = config_manager.yaml_read("config.yaml")
+config = yaml_read("config.yaml")
 
 SAVE_PATH = config["paths"]["save_path"]
 PORT = config["socket_zmq"]["port"]

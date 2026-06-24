@@ -1,7 +1,7 @@
 from os import replace
 from netCDF4 import Dataset  # pylint: disable=no-name-in-module
 import numpy as np
-import config_manager
+from yaml_manager import yaml_read
 
 
 # ── Standalone read helpers ──────────────────────────────
@@ -63,9 +63,9 @@ class H5Stitcher:
         """
         self.file_write = file_write
         self.info_config = {}
-        config = config_manager.yaml_read("config.yaml")
+        config = yaml_read("config.yaml")
         if add_info:
-            self.info_config = config_manager.yaml_read(
+            self.info_config = yaml_read(
                 f"{config["paths"]["info_dir"]}/_add_info.yaml")
         data_window = config["data_window"]
 
