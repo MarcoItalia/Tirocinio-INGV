@@ -3,8 +3,8 @@ import numpy as np
 import os
 
 FREQUENCES = 525
-OVERLAP = 20
-CHANNEL_START = 150
+OVERLAP = 0
+CHANNEL_START = 0
 CHANNEL_END = 300 + 1
 
 
@@ -28,7 +28,7 @@ for i in range(read_dataset.shape[0]):
     write_dataset = write_grp1.createVariable("StrainRate", datatype="float32", dimensions=(
         dataset_shape0, dataset_shape1, dataset_shape2))
     write_dataset[0, :, :] = read_dataset[i,
-                                          :-OVERLAP, CHANNEL_START:CHANNEL_END]
+                                          :, CHANNEL_START:CHANNEL_END]
     write_grp1.setncattr("Timestamp", read_grp4.getncattr("AcqStartTime"))
     write_grp1.setncattr("Channel_start", np.short(CHANNEL_START))
     write_grp1.setncattr("Channel_end", np.short(CHANNEL_END))

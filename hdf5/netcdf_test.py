@@ -19,6 +19,32 @@ def read_variable(group, var_search: str) -> Dataset:
         return None
 
 
+def read_attribute(group, var_search: str) -> Dataset:
+    """Recursive read of .h5 group, until it finds a specific attribute"""
+    try:
+        return group.getncattr(var_search)
+    except AttributeError:
+        for grp in group.groups.values():
+            result = read_attribute(grp, var_search)
+            if result is not None:
+                return result
+        return None
+
+
+def rec_read_attribute(h5_file, attr: str = "dt"):
+    file_read = h5_file
+    attribute = None
+    for group in file_read.groups.values():
+        try:
+            attribute = group.getncattr(attr)
+            return attribute
+        except AttributeError:
+            pass
+        if group.groups.values():
+            attribute = rec_read_attribute(group, attr)
+    return attribute
+
+
 file_read = Dataset(
     "SR_DS_GL20_production_2026-03-01_12-00-29_UTC.h5", 'r')
 file_write = Dataset("try3", 'w')
@@ -45,11 +71,12 @@ write_grp1.setncattr("Channel_end", np.short(CHANNEL_END))
 write_grp1.setncattr("Location", "Niscemi")
 write_grp1.setncattr("dt", np.short(write_dataset.shape[0]))
 
-
+attr = read_attribute(file_read, "GaugeLength")
+print(f"\nGaugeLength: {attr}\n")
 file_read.close()
 file_write.close()
 
 os.replace("try3", "try3.h5")
 
-with Dataset("try3.h5", 'r') as file_read:
-    print(read_variable(file_read, "StrainRate"))
+# with Dataset("try3.h5", 'r') as file_read:
+# print(read_variable(file_read, "StrainRate"))
