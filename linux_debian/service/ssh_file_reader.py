@@ -85,7 +85,8 @@ def check_connection(client_instance) -> bool:
 
 def main() -> None:
     """Connect to the acquisition machine and download a complete file every minute. 
-    Check if something changed. If it did, let the file in the directory to be downloaded"""
+    Check if something changed. If it did, let the yaml with the
+    new info be downloaded in the directory"""
     try:
         client_session, sftp_session = connect(
             IP_ADDRESS, PORT, USERNAME, PASSWORD)
@@ -119,7 +120,15 @@ def main() -> None:
                     IP_ADDRESS, PORT, USERNAME, PASSWORD)
 
         supplement_data = info_dict(f"{CONFIG_PATH}/{last_file}")
-        if supplement_data != yaml_read(f"{CONFIG_PATH}/_add_info.yaml"):
+        try:
+            if supplement_data != yaml_read(f"{CONFIG_PATH}/_add_info.yaml"):
+                yaml_write_dict(supplement_data,
+                                f"{CONFIG_PATH}/_add_info.yaml")
+                copyfile(f"{CONFIG_PATH}/_add_info.yaml",
+                         f"{CONFIG_PATH}/_tmp_copy.yaml")
+                replace(f"{CONFIG_PATH}/_tmp_copy.yaml",
+                        f"{SAVE_PATH}/_add_info.yaml")
+        except FileNotFoundError:
             yaml_write_dict(supplement_data, f"{CONFIG_PATH}/_add_info.yaml")
             copyfile(f"{CONFIG_PATH}/_add_info.yaml",
                      f"{CONFIG_PATH}/_tmp_copy.yaml")
