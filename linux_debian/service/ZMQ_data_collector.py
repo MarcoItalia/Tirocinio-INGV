@@ -27,6 +27,8 @@ try:
 except FileExistsError:
     pass
 
+# ── Start a thread to download complete file and read add info ──────────────────────────────
+
 t = Thread(target=ssh_file_reader.main,
            name="Info_Supplier", daemon=False)
 t.start()
@@ -51,11 +53,10 @@ data1 = array('d', message1[4:])
 TimeStamp = data1[0]
 TimeStamp -= double(0.5)
 
-print(f"Recived data {datetime.fromtimestamp(TimeStamp, tz=timezone.utc)}")
+print(f"\nRecived data {datetime.fromtimestamp(TimeStamp, tz=timezone.utc)}")
 if COUNT == 1:
     data2 = array('d', message2[0:48])
     dt = data2[1]
-    print(f"dt1: {dt}")
 
     data2 = array('i', message2[48:64])
     Size_Dist = data2[1]-data2[0]

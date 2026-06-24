@@ -1,4 +1,4 @@
-from os import replace, remove
+from os import replace, remove, mkdir
 from types import SimpleNamespace
 from time import sleep
 from netCDF4 import Dataset  # pylint: disable=no-name-in-module
@@ -58,16 +58,6 @@ def file_list_from_path(sftp_session, path_to_list: str = None) -> list:
     return [f for f in files]
 
 
-def namespace_to_dict(ns) -> dict:
-    result = {}
-    for key, value in vars(ns).items():
-        if isinstance(value, SimpleNamespace):
-            result[key] = namespace_to_dict(value)
-        else:
-            result[key] = value
-    return result
-
-
 def info_dict(path: str) -> dict:
     return_dict = {}
     for info in SUPP_INFO:
@@ -80,6 +70,13 @@ def info_dict(path: str) -> dict:
 def main() -> None:
     client_session, sftp_session = connect(
         IP_ADDRESS, PORT, USERNAME, PASSWORD)
+
+    # ── mkdir to store the downloaded files ──────────────────────────────
+    try:
+        mkdir(CONFIG_PATH)
+    except FileExistsError:
+        pass
+
     while True:
         # check conn
         list_file = file_list_from_path(sftp_session, SERVER_PATH)

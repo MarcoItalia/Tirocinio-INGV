@@ -16,7 +16,7 @@ def yaml_read(path_yaml: str = "config.yaml") -> SimpleNamespace:
 
 
 def yaml_write_dict(data: dict, path_yaml: str = "_add_info.yaml"):
-    """Legge un file yaml e ritorna un oggetto facilmente leggibile da python"""
+    """Scrive un file yaml dal campo data passato"""
     base_dir = path.dirname(path.abspath(
         __file__))  # si protrebbe trasformare in una funzione
     config_path = path.join(base_dir, path_yaml)
@@ -26,7 +26,7 @@ def yaml_write_dict(data: dict, path_yaml: str = "_add_info.yaml"):
         yaml.dump(to_write, stream=f, default_flow_style=False)
 
 
-def _convert_to_python_vars(data) -> dict:
+def _convert_to_python_vars(data: dict) -> dict:
     return_dict = {}
     for key, value in data.items():
         if isinstance(value, dict):
