@@ -11,16 +11,16 @@ import script_manager
 
 config = yaml_read("config.yaml")
 
-FILE_EXT = config.extension
-HOST = config.socket.ip
-PORT = config.socket.port
-USERNAME = config.credentials.user
-PASSWORD = config.credentials.passwd
-PATH_SERVER = f"{config.paths.path_server}"
-PATH_LOCAL = config.paths.path_local
-SERVER_DIR_NAME = config.paths.server_save_dir
-SCRIPT_NAME = config.server_script_name
-INFO_PATH = config.paths.info_dir + "/" + "_add_info.yaml"
+FILE_EXT = config["extension"]
+HOST = config["socket"]["ip"]
+PORT = config["socket"]["port"]
+USERNAME = config["credentials"]["user"]
+PASSWORD = config["credentials"]["passwd"]
+PATH_SERVER = config["paths"]["path_server"]
+PATH_LOCAL = config["paths"]["path_local"]
+SERVER_DIR_NAME = config["paths"]["server_save_dir"]
+SCRIPT_NAME = config["server_script_name"]
+INFO_PATH = config["paths"]["info_dir"]
 
 
 # ── Support functions ──────────────────────────────
@@ -128,7 +128,11 @@ def connect(host_ip, host_port, usarname: str, password: str):
 
 
 def main() -> None:
-
+    """Connect to a remote machine via ssh and download .h5 in a specified dir using sftp.
+    If you download a .yaml file, the program put that in another dir.
+    Start a script in the remote machine to take the data (.h5 files) from the acquisition machine 
+    Start a thread to "stitch" the .h5 file together and use the .yaml file to add the missing information.
+    """
     # ── Connect using the function ──────────────────────────────
     try:
         client, sftp_session = connect(HOST, PORT, USERNAME, PASSWORD)
@@ -137,7 +141,7 @@ def main() -> None:
         print(f"Cannot connect, exception: {e}")
         exit(-1)
 
-    # ── Check if the script in the connected machine is running ──────────────────────────────
+    # ── Check if the script in the connected machine is running ───────────────
     if not script_manager.is_script_running(client, SCRIPT_NAME):
         print(f"Starting script at {PATH_SERVER}/{SCRIPT_NAME}")
         script_manager.start_script(client, f"{PATH_SERVER}/{SCRIPT_NAME}")
@@ -178,7 +182,7 @@ def main() -> None:
                     try:
                         sftp_session.close()
                         client.close()
-                    except Exception:
+                    except Exception:  # pylint: disable=broad-exception-caught
                         pass
                     client, sftp_session = connect(
                         HOST, PORT, USERNAME, PASSWORD)
@@ -195,8 +199,9 @@ def main() -> None:
                     client, f"{PATH_SERVER}/{SCRIPT_NAME}")
                 consecutive_fails = 0
                 sleep(1.5)
-            # because 0mq doesn't have an innate and easy mode to check the connection, SCRIPT_NAME doesn't have a contingency
-            # in case the connection drop. This is the easiest and laziest way to just reset the connection
+            # because 0mq doesn't have an innate and easy mode to check the connection,
+            # SCRIPT_NAME doesn't have a contingency in case the connection drop.
+            # This is the easiest and laziest way to just reset the connection
             elif consecutive_fails >= 400:
                 script_manager.script_kill(
                     client, f"{PATH_SERVER}/{SCRIPT_NAME}")
@@ -213,8 +218,8 @@ def main() -> None:
             file_list = get_next_file(sftp_session,
                                       f"{PATH_SERVER}/{SERVER_DIR_NAME}/", file_list, consecutive_fails)
 
-            # check if the list is []. It can happens when we download (or start the script by program)
-            # too fast that the list of files in the dir is still empty.
+            # check if the list is []. It can happens when we download (or start
+            # the script by program) too fast that the list of files in the dir is still empty.
             if len(file_list) == 0:
                 consecutive_fails += 1
                 print(f"Fail number: {consecutive_fails}")
@@ -226,7 +231,7 @@ def main() -> None:
 
                 # check if the file is a .yaml file
                 extension = (file_list[0]).find(".yaml")
-                if extension == -1:
+                if extension != -1:
                     # if it is, download it. Don't update consecutive_fails
                     sftp_session.get(f"{PATH_SERVER}/{SERVER_DIR_NAME}/{file_list[0]}",
                                      f"{INFO_PATH}/_temp_download_info")

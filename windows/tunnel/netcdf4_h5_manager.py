@@ -65,21 +65,22 @@ class H5Stitcher:
         self.info_config = {}
         config = config_manager.yaml_read("config.yaml")
         if add_info:
-            self.info_config = vars(config_manager.yaml_read(
-                f"{config.paths.info_dir}/_add_info.yaml"))
-        data_window = config.data_window
+            self.info_config = config_manager.yaml_read(
+                f"{config["paths"]["info_dir"]}/_add_info.yaml")
+        data_window = config["data_window"]
 
-        self.leave_untouched = data_window.leave_file_untouched
+        self.leave_untouched = data_window["leave_file_untouched"]
         if self.leave_untouched:
             self.overlap = 0
         else:
-            self.overlap = data_window.overlap
+            self.overlap = data_window["overlap"]
             # NOTE: these are ABSOLUTE channel numbers, referring to the
             # original (uncutted) acquisition — e.g. 150-300. They are
             # converted to local array indices in _initialize, once we know
             # the source chunk's own Channel_start (src_channel_start).
-            self.config_channel_start = data_window.channels_start
-            self.config_channel_end = data_window.channels_end + 1  # exclusive
+            self.config_channel_start = data_window["channels_start"]
+            # exclusive
+            self.config_channel_end = data_window["channels_end"] + 1
 
         # local slicing indices (into the array as received) — resolved on
         # the first append, for both fresh and resumed files
@@ -87,7 +88,7 @@ class H5Stitcher:
         self.channel_end = None
         self._channel_range_resolved = False
 
-        self.location = data_window.location
+        self.location = data_window["location"]
 
         self.group = None
         self.variable = None
@@ -101,7 +102,7 @@ class H5Stitcher:
 
     # ── Public API ────────────────────────────────────────────────────────────
 
-    def append(self, file_read: Dataset, timestamp, dt) -> None:
+    def append(self, file_read, timestamp, dt) -> None:
         """
         Read the first variable from `file_read` and append it to the
         output file at the next available time position.
@@ -117,7 +118,14 @@ class H5Stitcher:
             Time step in milliseconds for this chunk — accumulated into
             "dt_millisec" on every append after the first.
         """
-        dataset = read_first_variable(file_read)
+        if isinstance(file_read, Dataset):
+            dataset = read_first_variable(file_read)
+        elif isinstance(file_read, np.ndarray):
+            dataset = file_read
+        elif isinstance(file_read, list):
+            dataset = file_read
+        else:
+            return None
 
         if not self._channel_range_resolved:
             src_channel_start = read_attribute(file_read, "Channel_start")
@@ -222,8 +230,8 @@ def h5_file_write(path_netcdf, file_read, timestamp, dt):
     """
     if isinstance(path_netcdf, str):
         pos_ext = path_netcdf.find(".h5")
-        if pos_ext != -1:
-            path_netcdf = path_netcdf[:pos_ext]
+        if pos_ext == -1:
+            raise ValueError
         file_write = Dataset("temp_file.tmp", "w")
     elif isinstance(path_netcdf, Dataset):
         file_write = path_netcdf
@@ -235,4 +243,4 @@ def h5_file_write(path_netcdf, file_read, timestamp, dt):
 
     if isinstance(path_netcdf, str):
         file_write.close()
-        replace("temp_file.tmp", f"{path_netcdf}.h5")
+        replace("temp_file.tmp", path_netcdf)

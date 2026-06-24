@@ -1,18 +1,16 @@
-from types import SimpleNamespace
-import numpy as np
 from os import path
+import numpy as np
 import yaml
-import dict_to_namespace as dtns
 
 
-def yaml_read(path_yaml: str = "config.yaml") -> SimpleNamespace:
+def yaml_read(path_yaml: str = "config.yaml") -> dict:
     """Legge un file yaml e ritorna un oggetto facilmente leggibile da python"""
     base_dir = path.dirname(path.abspath(
         __file__))  # si protrebbe trasformare in una funzione
     config_path = path.join(base_dir, path_yaml)
 
     with open(config_path, mode="r", encoding="utf-8") as f:
-        return dtns.dict_to_namespace(yaml.safe_load(f))
+        return yaml.safe_load(f)
 
 
 def yaml_write_dict(data: dict, path_yaml: str = "_add_info.yaml"):

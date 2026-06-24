@@ -17,12 +17,12 @@ from config_manager import yaml_read
 
 config = yaml_read("config.yaml")
 
-FILE_EXT = config.extension
-PATH_DATA = config.paths.path_local + "/"
-PATH_TO_SAVE = config.paths.complete_local_save_dir + "/"
-INFO_PATH = config.paths.info_dir + "/" + "_add_info.yaml"
+FILE_EXT = config["extension"]
+PATH_DATA = config["paths"]["path_local"] + "/"
+PATH_TO_SAVE = config["paths"]["complete_local_save_dir"] + "/"
+INFO_PATH = config["paths"]["info_dir"] + "/" + "_add_info.yaml"
 
-FILES_PER_STITCH = config.data_window.seconds_to_aggregate
+FILES_PER_STITCH = config["data_window"]["seconds_to_aggregate"]
 MAX_CONSECUTIVE_FAILS = 10
 
 

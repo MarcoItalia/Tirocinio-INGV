@@ -14,11 +14,11 @@ import config_manager
 # ── Config reader ──────────────────────────────
 config = config_manager.yaml_read("config.yaml")
 
-SAVE_PATH = config.data_dir.save_path
-PORT = config.socket_zmq.port
-IP_ADDRESS = config.socket_zmq.ip
-PROTOCOL = config.socket_zmq.protocol
-QUEUE_DIM = config.data_dir.queue_dim
+SAVE_PATH = config["paths"]["save_path"]
+PORT = config["socket_zmq"]["port"]
+IP_ADDRESS = config["socket_zmq"]["ip"]
+PROTOCOL = config["socket_zmq"]["protocol"]
+QUEUE_DIM = config["paths"]["queue_dim"]
 SOCKET_STR = f"{PROTOCOL}://{IP_ADDRESS}:{PORT}"
 
 # ── mkdir to store the downloaded files ──────────────────────────────
@@ -76,7 +76,7 @@ StrainRate = reshape(data3, (Size_Frequence + 1, Size_Dist + 1))
 filenames = next(walk(SAVE_PATH), (None, None, []))[2]
 if len(filenames) < QUEUE_DIM:
     print("Writing in the Queue")
-    h5_file_write(f"{SAVE_PATH}/{str((TimeStamp))}",
+    h5_file_write(f"{SAVE_PATH}/{str((TimeStamp))}.h5",
                   StrainRate, TimeStamp, dt)
 else:
     print(
@@ -108,6 +108,8 @@ while True:
 
     if TimeStamp < data1[0]:
         TimeStamp = data1[0]
+        # timestamp given is in the middle of acquisition. To take the timestamp
+        # at the start we subtract (and later sum) half a second
         TimeStamp -= double(0.5)
 
         data3 = array('f', message3)
@@ -115,7 +117,7 @@ while True:
         filenames = next(walk(SAVE_PATH), (None, None, []))[2]
         if len(filenames) < QUEUE_DIM:
             print("Writing in the Queue")
-            h5_file_write(f"{SAVE_PATH}/{str((TimeStamp))}",
+            h5_file_write(f"{SAVE_PATH}/{str((TimeStamp))}.h5",
                           StrainRate, TimeStamp, dt)
         else:
             print(
