@@ -44,16 +44,17 @@ def file_list_from_path(sftp_session, path_to_list: str = None) -> list:
 def up_file(list_last_timestamp, fails) -> list:
     """
     Check if the passed list as other elements. If it's True, than return the list minus the first element.
-    If the list has no elements, then return it. If the list as just one element and have not yet failed, that
-    means that this element has been already checked (last iteration had 2 element and was returned as a list of
+    If the list has no elements, then return it. If the list as just one element and have not yet failed, 
+    that means that this element has been already checked (last iteration had 2 element and was returned as a list of
     this singular item), the function "increment" the name as it was a double and return that new file.
     Parameters
     ----------
     list_last_timestamp: list
-        list of files that rapresent the files to check. It's the output of file_list_from_path or up_file or [].
+        list of files that rapresent the files to check. 
+        It's the output of file_list_from_path or up_file or [].
     fails: int
-        number of times the current file has been checked and was not found. This is relevant because only the first fail
-        the last file in the list is incremented. Incrementing each time will means just a waste of computation.        
+        number of times the current file has been checked and was not found. 
+        Only when the last file as not yet failed it needs to be incremented.
     """
     if len(list_last_timestamp) > 1:
         print("Reading from list")
@@ -79,15 +80,16 @@ def get_next_file(sftp_session, path: str, list_last_timestamp, fails) -> list:
     """
     Return a list of ordered files from which the first element is the next
     that need to be downloaded. 
-    It reset the list reading the working directory if the list is empty or if the download failed too many times.
+    It reset the list reading the dir if the list is empty or if it failed too many times.
     Parameters
     ----------
     path: str
         absolute path. The function will pass this to file_list_from_path in theoffchance it need to read the directory.
     list_last_timestamp: list
-        list of files that rapresent the files to check. It's the output of file_list_from_path or up_file or [].
+        list of files that rapresent the files to check. 
+        It's the output of file_list_from_path or up_file or [].
     fails: int
-        number of fails to find a specific file.
+        number of fails to find a file.
     """
     # check if reset is needed
     if len(list_last_timestamp) == 0 or fails >= 2:
@@ -173,10 +175,10 @@ def main() -> None:
             try:
                 transport = client.get_transport()
                 if transport is None or not transport.is_active():
-                    raise EOFError
+                    raise paramiko.SSHException
                 transport.send_ignore()
                 print("Connection Running")
-            except (EOFError, OSError, paramiko.ssh_exception.SSHException):
+            except (EOFError, OSError, paramiko.SSHException):
                 try:
                     print("Connection lost, restarting..")
                     try:
