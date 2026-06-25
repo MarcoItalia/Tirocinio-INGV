@@ -75,6 +75,20 @@ def up_file(list_last_timestamp, fails) -> list:
     return list_last_timestamp
 
 
+def create_dir(path_dir: str):
+    """
+    Create a dir from the passed parameter
+    Parameters
+    ----------
+    path_dir: str
+        absolute path.
+    """
+    try:
+        mkdir(path_dir)
+    except FileExistsError:
+        pass
+
+
 def get_next_file(sftp_session, path: str, list_last_timestamp, fails) -> list:
     """
     Return a list of ordered files from which the first element is the next
@@ -146,14 +160,13 @@ def main() -> None:
     if not script_manager.is_script_running(client, SCRIPT_NAME):
         print(f"Starting script at {PATH_SERVER}/{SCRIPT_NAME}")
         script_manager.start_script(client, f"{PATH_SERVER}/{SCRIPT_NAME}")
-        sleep(1.5)  # sleep because of the delay
+        sleep(1.5)  # sleep because of the connection delay
 
-    # ── mkdir to store the downloaded files ──────────────────────────────
+    # ── mkdir to store the downloaded and info files ──────────────────────────────
 
-    try:
-        mkdir(PATH_LOCAL)
-    except FileExistsError:
-        pass
+    create_dir(PATH_LOCAL)
+
+    create_dir(INFO_PATH)
 
     # ── Start a thread to stitch the downloaded file ──────────────────────────────
 
@@ -201,7 +214,7 @@ def main() -> None:
                 consecutive_fails = 0
                 sleep(1.5)
             # because 0mq doesn't have an innate and easy mode to check the connection,
-            # SCRIPT_NAME doesn't have a contingency in case the connection drop.
+            # SCRIPT_NAME doesn't have a contingency in case the connection drops.
             # This is the easiest and laziest way to just reset the connection
             elif consecutive_fails >= 400:
                 script_manager.script_kill(
@@ -223,7 +236,7 @@ def main() -> None:
             # the script by program) too fast that the list of files in the dir is still empty.
             if len(file_list) == 0:
                 consecutive_fails += 1
-                print(f"Fail number: {consecutive_fails}")
+                print(f"\nList empty\n Fail number: {consecutive_fails}")
                 continue
 
             # check if the file is a .h5 file
@@ -245,6 +258,7 @@ def main() -> None:
                                f"{INFO_PATH}/{file_list[0]}")
                     sftp_session.remove(
                         f"{PATH_SERVER}/{SERVER_DIR_NAME}/{file_list[0]}")
+                    print(f"\nRead {file_list[0]}")
                     continue
                 consecutive_fails += 1
                 continue
@@ -256,7 +270,7 @@ def main() -> None:
             rename(f"{PATH_LOCAL}/_temp_download_file",
                    f"{PATH_LOCAL}/{file_list[0]}")
 
-            print(f"Read {file_list[0]}")
+            print(f"\nRead {file_list[0]}")
             consecutive_fails = 0
 
             # after the download we remove it to not download it again.
