@@ -14,7 +14,7 @@ USERNAME = CONFIG_DICT["credentials"]["user"]
 PASSWORD = CONFIG_DICT["credentials"]["passwd"]
 SERVER_PATH = CONFIG_DICT["paths"]["server_data_dir"]
 SAVE_PATH = CONFIG_DICT["paths"]["save_path"]
-CONFIG_PATH = CONFIG_DICT["paths"]["info_dir"]
+ADD_INFO_PATH = CONFIG_DICT["paths"]["info_dir"]
 SUPP_INFO = CONFIG_DICT["supplement_attribute"]
 
 
@@ -110,7 +110,7 @@ def main() -> None:
 
     # ── mkdir to store the downloaded files ──────────────────────────────
     try:
-        mkdir(CONFIG_PATH)
+        mkdir(ADD_INFO_PATH)
     except FileExistsError:
         pass
 
@@ -125,7 +125,7 @@ def main() -> None:
             list_file.sort(reverse=True)
             last_file = list_file[0]  # if there is, take the last file
             sftp_session.get(f"{SERVER_PATH}/{last_file}",
-                             f"{CONFIG_PATH}/{last_file}")
+                             f"{ADD_INFO_PATH}/{last_file}")
         # if you get a connection error, check the connection
         except (IOError, paramiko.SSHException):
             if not check_connection(client_session):
@@ -139,25 +139,25 @@ def main() -> None:
 
         # ── Extract info and save them. Leave a copy in memory for future check ──────────────────────────
 
-        supplement_data = extract_info_dict(f"{CONFIG_PATH}/{last_file}")
+        supplement_data = extract_info_dict(f"{ADD_INFO_PATH}/{last_file}")
         try:
-            if supplement_data != yaml_read(f"{CONFIG_PATH}/_add_info.yaml"):
+            if supplement_data != yaml_read(f"{ADD_INFO_PATH}/_add_info.yaml"):
                 yaml_write_dict(supplement_data,
-                                f"{CONFIG_PATH}/_add_info.yaml")
-                copyfile(f"{CONFIG_PATH}/_add_info.yaml",
-                         f"{CONFIG_PATH}/_tmp_copy.yaml")
-                replace(f"{CONFIG_PATH}/_tmp_copy.yaml",
+                                f"{ADD_INFO_PATH}/_add_info.yaml")
+                copyfile(f"{ADD_INFO_PATH}/_add_info.yaml",
+                         f"{ADD_INFO_PATH}/_tmp_copy.yaml")
+                replace(f"{ADD_INFO_PATH}/_tmp_copy.yaml",
                         f"{SAVE_PATH}/_add_info.yaml")
         # the not found refer to _add_info.yaml, because all the other are created here and
         # really not accessed from someone/something else. Basically, if it's the first time
         # _add_info.yaml is not yet there, so it's saved
         except FileNotFoundError:
-            yaml_write_dict(supplement_data, f"{CONFIG_PATH}/_add_info.yaml")
-            copyfile(f"{CONFIG_PATH}/_add_info.yaml",
-                     f"{CONFIG_PATH}/_tmp_copy.yaml")
-            replace(f"{CONFIG_PATH}/_tmp_copy.yaml",
+            yaml_write_dict(supplement_data, f"{ADD_INFO_PATH}/_add_info.yaml")
+            copyfile(f"{ADD_INFO_PATH}/_add_info.yaml",
+                     f"{ADD_INFO_PATH}/_tmp_copy.yaml")
+            replace(f"{ADD_INFO_PATH}/_tmp_copy.yaml",
                     f"{SAVE_PATH}/_add_info.yaml")
-        remove(f"{CONFIG_PATH}/{last_file}")
+        remove(f"{ADD_INFO_PATH}/{last_file}")
         sleep(59)
 
 
