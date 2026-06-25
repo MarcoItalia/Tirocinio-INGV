@@ -15,6 +15,7 @@ PATH_TO_SAVE = config["paths"]["complete_local_save_dir"] + "/"
 INFO_PATH = config["paths"]["info_dir"] + "/" + "_add_info.yaml"
 
 FILES_PER_STITCH = config["data_window"]["seconds_to_aggregate"]
+ADD_INFO_BOOL = True
 MAX_CONSECUTIVE_FAILS = 10
 
 
@@ -39,7 +40,7 @@ def stitch(timestamp_str: str) -> None:
     prefix = "UNK"
 
     with Dataset(tmp_path, "w") as file_write:
-        stitcher = H5Stitcher(file_write, True)
+        stitcher = H5Stitcher(file_write, ADD_INFO_BOOL)
 
         fail_count = 0
         i = 0
@@ -52,13 +53,14 @@ def stitch(timestamp_str: str) -> None:
                     dt = read_attribute(file_read, "dt_millisec")
                     if i == 0:
                         # read info and put it in saved_dict
-                        add_info = yaml_read(INFO_PATH)
+                        if ADD_INFO_BOOL:
+                            add_info = yaml_read(INFO_PATH)
                         dt_to_aggregate = dt
                         prefix = read_attribute(file_read, "Location")
                     elif dt != dt_to_aggregate:
                         break
                     # check if the info changed from the last time
-                    elif add_info != (yaml_read(INFO_PATH)):
+                    elif ADD_INFO_BOOL and add_info != (yaml_read(INFO_PATH)):
                         break
 
                     stitcher.append(file_read, timestamp, dt)
