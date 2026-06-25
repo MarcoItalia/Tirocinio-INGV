@@ -62,11 +62,14 @@ class H5Stitcher:
             of re-initialising.
         """
         self.file_write = file_write
-        self.info_config = {}
+        self.add_info = {}
         config = yaml_read("config.yaml")
         if add_info:
-            self.info_config = yaml_read(
-                f"{config["paths"]["info_dir"]}/_add_info.yaml")
+            try:
+                self.add_info = yaml_read(
+                    f"{config["paths"]["info_dir"]}/_add_info.yaml")
+            except (FileNotFoundError, IOError):
+                pass
         data_window = config["data_window"]
 
         self.leave_untouched = data_window["leave_file_untouched"]
@@ -192,8 +195,9 @@ class H5Stitcher:
         self.group.setncattr("Channel_end", np.short(abs_channel_end))
         self.group.setncattr("Location", self.location)
         self.group.setncattr("dt_millisec", np.short(dt))
-        for key, value in self.info_config.items():
-            self.group.setncattr(key, value)
+        if self.add_info:
+            for key, value in self.add_info.items():
+                self.group.setncattr(key, value)
 
         time_dim = self.group.createDimension("Time", None)
         chan_dim = self.group.createDimension(
