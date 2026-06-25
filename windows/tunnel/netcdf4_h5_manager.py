@@ -22,9 +22,14 @@ def read_attribute(path_netcdf, attr: str = "dt"):
     def _search(ds):
         for group in ds.groups.values():
             try:
-                return group.getncattr(attr)
+                attr_value = group.getncattr(attr)
+                if attr_value is not None:
+                    return attr_value
             except AttributeError:
                 pass
+            attr_value = _search(group)
+            if attr_value is not None:
+                return attr_value
         return None
 
     if isinstance(path_netcdf, str):
