@@ -59,9 +59,15 @@ def file_list_from_path(sftp_session, path_to_list: str = None) -> list:
 
 
 def extract_info_dict(path: str) -> dict:
-    """Read a .h5 file from the passed variable path.
+    """
+    Read a .h5 file from the passed variable path.
     Return a dictionary with the info with key from the config and value 
-    from the read file."""
+    from the read file.
+    Parameters
+    ----------
+    path: str
+        string with the complete path of the .h5 file to read attribute from
+    """
     return_dict = {}
     with Dataset(path, mode="r") as file_read:
         for info in SUPP_INFO:
@@ -72,7 +78,13 @@ def extract_info_dict(path: str) -> dict:
 
 
 def check_connection(client_instance) -> bool:
-    """Check if the connection with client_instance is still active. Return a bool"""
+    """
+    Check if the connection with client_instance is still active. Return a bool
+    Parameters
+    ----------
+    client_instance: 
+        client session. First result of connect()
+    """
     try:
         transport = client_instance.get_transport()
         if transport is None or not transport.is_active():
@@ -84,9 +96,12 @@ def check_connection(client_instance) -> bool:
 
 
 def main() -> None:
-    """Connect to the acquisition machine and download a complete file every minute. 
+    """
+    Connect to the acquisition machine and download a complete file every minute. 
     Check if something changed. If it did, let the yaml with the
-    new info be downloaded in the directory"""
+    new info be downloaded in the directory
+    """
+    # ── Connect to the acquisition machine ──────────────────────────────
     try:
         client_session, sftp_session = connect(
             IP_ADDRESS, PORT, USERNAME, PASSWORD)
@@ -99,16 +114,19 @@ def main() -> None:
     except FileExistsError:
         pass
 
+    # ── Start continuous acquisition ──────────────────────────────
     while True:
+        # ── Get the file from the directory ──────────────────────────────
         try:
             list_file = file_list_from_path(sftp_session, SERVER_PATH)
-            list_file.sort(reverse=True)
-            if len(list_file) == 0:
+            if len(list_file) == 0:  # if there isn't one, just retry after 1 second
                 sleep(1)
                 continue
-            last_file = list_file[0]
+            list_file.sort(reverse=True)
+            last_file = list_file[0]  # if there is, take the last file
             sftp_session.get(f"{SERVER_PATH}/{last_file}",
                              f"{CONFIG_PATH}/{last_file}")
+        # if you get a connection error, check the connection
         except (IOError, paramiko.SSHException):
             if not check_connection(client_session):
                 try:
@@ -119,6 +137,8 @@ def main() -> None:
                 client_session, sftp_session = connect(
                     IP_ADDRESS, PORT, USERNAME, PASSWORD)
 
+        # ── Extract info and save them. Leave a copy in memory for future check ──────────────────────────
+
         supplement_data = extract_info_dict(f"{CONFIG_PATH}/{last_file}")
         try:
             if supplement_data != yaml_read(f"{CONFIG_PATH}/_add_info.yaml"):
@@ -128,6 +148,9 @@ def main() -> None:
                          f"{CONFIG_PATH}/_tmp_copy.yaml")
                 replace(f"{CONFIG_PATH}/_tmp_copy.yaml",
                         f"{SAVE_PATH}/_add_info.yaml")
+        # the not found refer to _add_info.yaml, because all the other are created here and
+        # really not accessed from someone/something else. Basically, if it's the first time
+        # _add_info.yaml is not yet there, so it's saved
         except FileNotFoundError:
             yaml_write_dict(supplement_data, f"{CONFIG_PATH}/_add_info.yaml")
             copyfile(f"{CONFIG_PATH}/_add_info.yaml",

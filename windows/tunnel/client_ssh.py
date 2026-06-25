@@ -64,7 +64,7 @@ def up_file(list_last_timestamp, fails) -> list:
     # increment
     if fails == 0:
         pos_ext = list_last_timestamp[0].find(FILE_EXT)
-        if pos_ext != -1:
+        if pos_ext != -1:  # extension has been found
             file_name = list_last_timestamp[0]
             print(f"Incrementing {file_name}")
             list_last_timestamp[0] = str(
@@ -72,7 +72,6 @@ def up_file(list_last_timestamp, fails) -> list:
         else:
             return []
 
-    # print(list_last_timestamp[0])
     return list_last_timestamp
 
 
