@@ -40,7 +40,27 @@ def read_attribute(path_netcdf, attr: str = "dt"):
     return None
 
 
+# ── Function to optimize ──────────────────────────────
+
+
+def _minimize_int_type(value) -> type:
+    """
+    Return the smallest numpy integer type that can represent the value.
+    Order: int8 → int16 → int32 → int64
+    """
+    for dtype in [np.int8, np.int16, np.int32, np.int64]:
+        info = np.iinfo(dtype)
+        if info.min <= value <= info.max:
+            return dtype
+    return np.int64  # fallback
+
+
+def optimize_memory():
+    pass
+
+
 # ── Stitcher ────────────────────────────────────────────────────────────────────
+
 
 class H5Stitcher:
     """
@@ -202,7 +222,20 @@ class H5Stitcher:
         self.group.setncattr("dt_millisec", np.short(dt))
         if self.add_info:
             for key, value in self.add_info.items():
-                self.group.setncattr(key, value)
+                new_type = type(value)
+                if isinstance(value, int) or isinstance(value, np.integer):
+                    new_type = _minimize_int_type(value)
+                elif isinstance(value, list):
+                    new_list = []
+                    for item in value:
+                        if isinstance(item, int) or isinstance(item, np.integer):
+                            new_type = _minimize_int_type(item)
+                            new_list.append(new_type(item))
+                        else:
+                            new_list.append(value)
+                    value = new_list
+                    new_type = list
+                self.group.setncattr(key, new_type(value))
 
         time_dim = self.group.createDimension("Time", None)
         chan_dim = self.group.createDimension(
