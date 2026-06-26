@@ -5,9 +5,9 @@ socket:
 data_window:
   channels_start: 160
   channels_end: 290
-  overlap: 10
+  overlap: 10 # server already delete overlap. This is in case someone want to deletes more
   location: "Niscemi"
-  leave_file_untouched: True
+  leave_file_untouched: True # Take the data as it's downloaded from the server, ignoring channels and overlap.
   seconds_to_aggregate: 60
 credentials:
   user: marco
