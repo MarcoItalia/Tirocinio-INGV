@@ -1,6 +1,7 @@
 from os import replace, remove, mkdir
 from shutil import copyfile
 from time import sleep
+from datetime import datetime, timezone
 from netCDF4 import Dataset  # pylint: disable=no-name-in-module
 import numpy as np
 from yaml_manager import yaml_read, yaml_write_dict
@@ -57,6 +58,12 @@ def file_list_from_path(sftp_session, path_to_list: str = None) -> list:
         sftp_session.chdir(path_to_list)
     files = sftp_session.listdir()
     return [f for f in files]
+
+
+def get_server_path(base_path: str) -> str:
+    """Build the complete path to download the current file from"""
+    today = datetime.now(tz=timezone.utc)
+    return f"{base_path}/{today.strftime('%y-%m-%d')}"
 
 
 def extract_info_dict(path: str) -> dict:
@@ -142,14 +149,16 @@ def main() -> None:
     # ── Start continuous acquisition ──────────────────────────────
     while True:
         # ── Get the file from the directory ──────────────────────────────
+        path_to_download = get_server_path(SERVER_PATH)
         try:
-            list_file = file_list_from_path(sftp_session, SERVER_PATH)
+            list_file = file_list_from_path(sftp_session, path_to_download)
             if len(list_file) == 0:  # if there isn't one, just retry after 1 second
                 sleep(1)
                 continue
             list_file.sort(reverse=True)
             last_file = list_file[0]  # if there is, take the last file
-            sftp_session.get(f"{SERVER_PATH}/{last_file}",
+            # !. The directory changes daily
+            sftp_session.get(f"{path_to_download}/{last_file}",
                              f"{ADD_INFO_PATH}/{last_file}")
         # if you get a connection error, check the connection
         except (IOError, paramiko.SSHException):
