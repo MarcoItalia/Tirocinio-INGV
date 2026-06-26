@@ -3,9 +3,9 @@ from time import sleep
 from datetime import datetime, timezone
 from netCDF4 import Dataset  # pylint: disable=no-name-in-module
 from numpy import double
-
 from netcdf4_h5_manager import H5Stitcher, read_attribute
 from yaml_manager import yaml_read
+import numpy as np
 
 config = yaml_read("config.yaml")
 
@@ -17,6 +17,30 @@ INFO_PATH = config["paths"]["info_dir"] + "/" + "_add_info.yaml"
 FILES_PER_STITCH = config["data_window"]["seconds_to_aggregate"]
 ADD_INFO_BOOL = True
 MAX_CONSECUTIVE_FAILS = 10
+
+
+def dicts_are_equal(dict1: dict, dict2: dict) -> bool:
+    """
+    Check if the dictionary are equals. Return a bool.
+    Python have a built in check for dictionary confronts,
+    dict == dict2 works, but that confront value per value, and ends up
+    confronting arrays in this case. Confronting arrays raise a ValueError.
+    Parameters
+    ----------
+    dict1: dict
+    dict2: dict
+    """
+
+    if dict1.keys() != dict2.keys():
+        return False
+    for key in dict1:
+        v1, v2 = dict1[key], dict2[key]
+        if isinstance(v1, np.ndarray) or isinstance(v2, np.ndarray):
+            if not np.array_equal(v1, v2):
+                return False
+        elif v1 != v2:
+            return False
+    return True
 
 
 def wait_for_first_file() -> str:
@@ -47,7 +71,9 @@ def stitch(timestamp_str: str) -> None:
         dt_to_aggregate = 0
 
         while i < FILES_PER_STITCH:
-            file_path = path.join(PATH_DATA, f"{timestamp + i}{FILE_EXT}")
+            file_path = path.join(
+                PATH_DATA, f"{float(timestamp) + float(i)}{FILE_EXT}")
+            # print(f"Now {file_path}\n")
             try:
                 with Dataset(file_path, "r") as file_read:
                     dt = read_attribute(file_read, "dt_millisec")
@@ -58,9 +84,11 @@ def stitch(timestamp_str: str) -> None:
                         dt_to_aggregate = dt
                         prefix = read_attribute(file_read, "Location")
                     elif dt != dt_to_aggregate:
+                        print("Break for dt")
                         break
                     # check if the info changed from the last time
-                    elif ADD_INFO_BOOL and add_info != (yaml_read(INFO_PATH)):
+                    elif ADD_INFO_BOOL and not dicts_are_equal(add_info, yaml_read(INFO_PATH)):
+                        print("Break for dictionary")
                         break
 
                     stitcher.append(file_read, timestamp, dt)
