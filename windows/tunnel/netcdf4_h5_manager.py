@@ -55,8 +55,41 @@ def _minimize_int_type(value) -> type:
     return np.int64  # fallback
 
 
-def optimize_memory():
-    pass
+def optimize_memory(value):
+    """
+    Reduce the memory footprint of a value by casting it to the smallest
+    compatible type.
+    Supports scalar integers (int, np.integer) and lists.
+    Floats and other types are returned unchanged.
+    Parameters
+    ----------
+    value : int | np.integer | list | any
+        The value to optimize.
+
+    Returns
+    -------
+    new_type : type
+        The type of the optimized value (e.g. np.int16, list).
+        For unchanged types, returns the original type of value.
+    value : int | np.integer | list | any
+        The value cast to the smallest compatible type.
+        For lists, each integer element is individually optimized.
+        Non-integer values are returned unchanged.
+    """
+    new_type = type(value)
+    if isinstance(value, int) or isinstance(value, np.integer):
+        new_type = _minimize_int_type(value)
+    elif isinstance(value, list):
+        new_list = []
+        for item in value:
+            if isinstance(item, int) or isinstance(item, np.integer):
+                new_type = _minimize_int_type(item)
+                new_list.append(new_type(item))
+            else:
+                new_list.append(item)
+        value = new_list
+        new_type = list
+    return new_type, value
 
 
 # ── Stitcher ────────────────────────────────────────────────────────────────────
@@ -222,19 +255,7 @@ class H5Stitcher:
         self.group.setncattr("dt_millisec", np.short(dt))
         if self.add_info:
             for key, value in self.add_info.items():
-                new_type = type(value)
-                if isinstance(value, int) or isinstance(value, np.integer):
-                    new_type = _minimize_int_type(value)
-                elif isinstance(value, list):
-                    new_list = []
-                    for item in value:
-                        if isinstance(item, int) or isinstance(item, np.integer):
-                            new_type = _minimize_int_type(item)
-                            new_list.append(new_type(item))
-                        else:
-                            new_list.append(value)
-                    value = new_list
-                    new_type = list
+                new_type, value = optimize_memory(value)
                 self.group.setncattr(key, new_type(value))
 
         time_dim = self.group.createDimension("Time", None)
