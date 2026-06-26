@@ -2,6 +2,7 @@ from os import replace, remove, mkdir
 from shutil import copyfile
 from time import sleep
 from netCDF4 import Dataset  # pylint: disable=no-name-in-module
+import numpy as np
 from yaml_manager import yaml_read, yaml_write_dict
 from netcdf4_h5_manager import read_attribute
 import paramiko
@@ -95,6 +96,30 @@ def check_connection(client_instance) -> bool:
         return False
 
 
+def dicts_are_equal(dict1: dict, dict2: dict) -> bool:
+    """
+    Check if the dictionary are equals. Return a bool.
+    Python have a built in check for dictionary confronts,
+    dict == dict2 works, but that confront value per value, and ends up
+    confronting arrays in this case. Confronting arrays raise a ValueError.
+    Parameters
+    ----------
+    dict1: dict
+    dict2: dict
+    """
+
+    if dict1.keys() != dict2.keys():
+        return False
+    for key in dict1:
+        v1, v2 = dict1[key], dict2[key]
+        if isinstance(v1, np.ndarray) or isinstance(v2, np.ndarray):
+            if not np.array_equal(v1, v2):
+                return False
+        elif v1 != v2:
+            return False
+    return True
+
+
 def main() -> None:
     """
     Connect to the acquisition machine and download a complete file every minute. 
@@ -140,8 +165,11 @@ def main() -> None:
         # ── Extract info and save them. Leave a copy in memory for future check ──────────────────────────
 
         supplement_data = extract_info_dict(f"{ADD_INFO_PATH}/{last_file}")
+
         try:
-            if supplement_data != yaml_read(f"{ADD_INFO_PATH}/_add_info.yaml"):
+
+            old_data = yaml_read(f"{ADD_INFO_PATH}/_add_info.yaml")
+            if not dicts_are_equal(supplement_data, old_data):
                 yaml_write_dict(supplement_data,
                                 f"{ADD_INFO_PATH}/_add_info.yaml")
                 copyfile(f"{ADD_INFO_PATH}/_add_info.yaml",
@@ -158,6 +186,7 @@ def main() -> None:
             replace(f"{ADD_INFO_PATH}/_tmp_copy.yaml",
                     f"{SAVE_PATH}/_add_info.yaml")
         remove(f"{ADD_INFO_PATH}/{last_file}")
+        # break # to debug, remove from comment this break
         sleep(59)
 
 
