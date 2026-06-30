@@ -1,4 +1,8 @@
-socket:
+socket_zmq:
+  protocol: tcp #must stay tcp
+  ip: 0.0.0.0 #testing purposes
+  port: 5555
+socket_ssh:
   protocol: tcp #must stay tcp
   ip: 0.0.0.0 #testing purposes
   port: 5555
@@ -8,6 +12,20 @@ data_window:
   overlap: 20
   location: "Niscemi"
   leave_file_untouched: False
-data_dir:
+credentials:
+  user: marco
+  passwd: marco
+paths:
   save_path: "data"
+  info_dir: "config"
+  server_data_dir: "data_dir" #complete_path
   queue_dim: 20
+supplement_attribute:
+  [
+    GaugeLength,
+    PulseRateFreq,
+    FiberLength,
+    SamplingRate,
+    AmpliPower,
+    DataDomain,
+  ]

@@ -1,0 +1,9 @@
+AmpliPower: 24
+DataDomain:
+- 4
+- 2
+- 0
+FiberLength: 4000
+GaugeLength: 20.0
+PulseRateFreq: 20000000
+SamplingRate: 250000000

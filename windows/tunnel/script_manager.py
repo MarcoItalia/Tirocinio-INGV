@@ -1,4 +1,3 @@
-import time
 import paramiko
 
 
@@ -21,12 +20,12 @@ def pid_script(ssh, script_name) -> int:
 
 def script_kill(ssh, script):
     """Kill the script which the pid or name is passed. Accept as script int or str"""
-    if type(script) is int:
+    if isinstance(script, int):
         pass
-    elif type(script) is str:
+    elif isinstance(script, str):
         script = pid_script(ssh, script)
     else:
-        raise TypeError("Only integers and str are allowed")
+        raise TypeError("Only integers or str are allowed")
     ssh.exec_command(f"kill {script}")
 
 

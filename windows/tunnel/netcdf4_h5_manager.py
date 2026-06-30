@@ -1,6 +1,7 @@
+from os import replace
 from netCDF4 import Dataset  # pylint: disable=no-name-in-module
+from yaml_manager import yaml_read
 import numpy as np
-import config_manager
 
 
 # ── Standalone read helpers ──────────────────────────────
@@ -21,9 +22,14 @@ def read_attribute(path_netcdf, attr: str = "dt"):
     def _search(ds):
         for group in ds.groups.values():
             try:
-                return group.getncattr(attr)
+                attr_value = group.getncattr(attr)
+                if attr_value is not None:
+                    return attr_value
             except AttributeError:
                 pass
+            attr_value = _search(group)
+            if attr_value is not None:
+                return attr_value
         return None
 
     if isinstance(path_netcdf, str):
@@ -34,7 +40,60 @@ def read_attribute(path_netcdf, attr: str = "dt"):
     return None
 
 
+# ── Function to optimize ──────────────────────────────
+
+
+def _minimize_int_type(value) -> type:
+    """
+    Return the smallest numpy integer type that can represent the value.
+    Order: int8 → int16 → int32 → int64
+    """
+    for dtype in [np.int8, np.int16, np.int32, np.int64]:
+        info = np.iinfo(dtype)
+        if info.min <= value <= info.max:
+            return dtype
+    return np.int64  # fallback
+
+
+def optimize_memory(value):
+    """
+    Reduce the memory footprint of a value by casting it to the smallest
+    compatible type.
+    Supports scalar integers (int, np.integer) and lists.
+    Floats and other types are returned unchanged.
+    Parameters
+    ----------
+    value : int | np.integer | list | any
+        The value to optimize.
+
+    Returns
+    -------
+    new_type : type
+        The type of the optimized value (e.g. np.int16, list).
+        For unchanged types, returns the original type of value.
+    value : int | np.integer | list | any
+        The value cast to the smallest compatible type.
+        For lists, each integer element is individually optimized.
+        Non-integer values are returned unchanged.
+    """
+    new_type = type(value)
+    if isinstance(value, int) or isinstance(value, np.integer):
+        new_type = _minimize_int_type(value)
+    elif isinstance(value, list):
+        new_list = []
+        for item in value:
+            if isinstance(item, int) or isinstance(item, np.integer):
+                new_type = _minimize_int_type(item)
+                new_list.append(new_type(item))
+            else:
+                new_list.append(item)
+        value = new_list
+        new_type = list
+    return new_type, value
+
+
 # ── Stitcher ────────────────────────────────────────────────────────────────────
+
 
 class H5Stitcher:
     """
@@ -44,13 +103,13 @@ class H5Stitcher:
     Usage
     -----
     >>> with Dataset("download_incomplete.tmp", "w") as file_write:
-    ...     stitcher = H5Stitcher(file_write)
-    ...     for file_path in chunk_paths:
+    ...     stitcher = H5Stitcher(file_write, True)
+    ...     for file_path in list_file_dir:
     ...         with Dataset(file_path, "r") as file_read:
     ...             stitcher.append(file_read, timestamp, dt)
     """
 
-    def __init__(self, file_write: Dataset):
+    def __init__(self, file_write: Dataset, add_info: bool = False):
         """
         Parameters
         ----------
@@ -61,21 +120,28 @@ class H5Stitcher:
             of re-initialising.
         """
         self.file_write = file_write
+        self.add_info = {}
+        config = yaml_read("config.yaml")
+        if add_info:
+            try:
+                self.add_info = yaml_read(
+                    f"{config["paths"]["info_dir"]}/_add_info.yaml")
+            except (FileNotFoundError, IOError):
+                pass
+        data_window = config["data_window"]
 
-        config = config_manager.yaml_read("config.yaml")
-        data_window = config.data_window
-
-        self.leave_untouched = data_window.leave_file_untouched
+        self.leave_untouched = data_window["leave_file_untouched"]
         if self.leave_untouched:
             self.overlap = 0
         else:
-            self.overlap = data_window.overlap
+            self.overlap = data_window["overlap"]
             # NOTE: these are ABSOLUTE channel numbers, referring to the
             # original (uncutted) acquisition — e.g. 150-300. They are
             # converted to local array indices in _initialize, once we know
             # the source chunk's own Channel_start (src_channel_start).
-            self.config_channel_start = data_window.channels_start
-            self.config_channel_end = data_window.channels_end + 1  # exclusive
+            self.config_channel_start = data_window["channels_start"]
+            # exclusive
+            self.config_channel_end = data_window["channels_end"] + 1
 
         # local slicing indices (into the array as received) — resolved on
         # the first append, for both fresh and resumed files
@@ -83,7 +149,7 @@ class H5Stitcher:
         self.channel_end = None
         self._channel_range_resolved = False
 
-        self.location = data_window.location
+        self.location = data_window["location"]
 
         self.group = None
         self.variable = None
@@ -97,7 +163,7 @@ class H5Stitcher:
 
     # ── Public API ────────────────────────────────────────────────────────────
 
-    def append(self, file_read: Dataset, timestamp, dt) -> None:
+    def append(self, file_read, timestamp, dt) -> None:
         """
         Read the first variable from `file_read` and append it to the
         output file at the next available time position.
@@ -113,7 +179,14 @@ class H5Stitcher:
             Time step in milliseconds for this chunk — accumulated into
             "dt_millisec" on every append after the first.
         """
-        dataset = read_first_variable(file_read)
+        if isinstance(file_read, Dataset):
+            dataset = read_first_variable(file_read)
+        elif isinstance(file_read, np.ndarray):
+            dataset = file_read
+        elif isinstance(file_read, list):
+            dataset = file_read
+        else:
+            return None
 
         if not self._channel_range_resolved:
             src_channel_start = read_attribute(file_read, "Channel_start")
@@ -123,11 +196,10 @@ class H5Stitcher:
             src_channel_start = None  # not needed again
 
         if not self.initialized:
-            self._initialize(dataset, timestamp, dt, src_channel_start)
+            self._initialize(timestamp, dt, src_channel_start)
 
-        self._assign(dataset)
-        # self.position += dataset.shape[0]
-        self.position += 1
+        written_lines = self._assign(dataset)
+        self.position += written_lines
 
     # ── Internals ─────────────────────────────────────────────────────────────
 
@@ -167,7 +239,7 @@ class H5Stitcher:
         self.channel_start = local_start
         self.channel_end = local_end
 
-    def _initialize(self, dataset, timestamp, dt, src_channel_start) -> None:
+    def _initialize(self, timestamp, dt, src_channel_start) -> None:
         # translate local slicing indices back into absolute channel numbers
         # using the source chunk's own Channel_start attribute
         src_start = int(
@@ -181,37 +253,22 @@ class H5Stitcher:
         self.group.setncattr("Channel_end", np.short(abs_channel_end))
         self.group.setncattr("Location", self.location)
         self.group.setncattr("dt_millisec", np.short(dt))
+        if self.add_info:
+            for key, value in self.add_info.items():
+                new_type, value = optimize_memory(value)
+                self.group.setncattr(key, new_type(value))
 
-        if dataset.ndim == 2:
-            n_freq = dataset.shape[0] - self.overlap
-        else:
-            n_freq = dataset.shape[1] - self.overlap
-
-        # if check_for_dim == 2:
-        #   no time
-        #   freq_dim = self.group.createDimension("Frequences", None)
         time_dim = self.group.createDimension("Time", None)
-        freq_dim = self.group.createDimension("Frequences", n_freq)
         chan_dim = self.group.createDimension(
             "Channels", self.channel_end - self.channel_start
         )
-        # if check_for_dim ==2:
-        # self.variable = self.group.createVariable(
-        #    "StrainRate",
-        #    datatype="float32",
-        #    dimensions=(freq_dim, chan_dim),
-        # )
+
         self.variable = self.group.createVariable(
             "StrainRate",
             datatype="float32",
-            dimensions=(time_dim, freq_dim, chan_dim),
+            dimensions=(time_dim, chan_dim),
         )
-
         self.initialized = True
-
-    # def _accumulate_dt(self, dt) -> None:
-    #    current = np.short(self.group.getncattr("dt_millisec"))
-    #    self.group.setncattr("dt_millisec", current + np.short(dt))
 
     def _assign(self, dataset) -> None:
         ch = slice(self.channel_start, self.channel_end)
@@ -223,5 +280,30 @@ class H5Stitcher:
             data = dataset[0, :-self.overlap,
                            ch] if self.overlap > 0 else dataset[0, :, ch]
 
-        # self.variable[self.position:, : ] = data
-        self.variable[self.position, :, :] = data
+        self.variable[self.position: self.position +
+                      data.shape[0], :] = data
+        return data.shape[0]
+
+# ── Compatibility Wrapper ────────────────────────────────────────────────────────────────────
+
+
+def h5_file_write(path_netcdf, file_read, timestamp, dt):
+    """
+    Backward-compatible single-shot writer.
+    """
+    if isinstance(path_netcdf, str):
+        pos_ext = path_netcdf.find(".h5")
+        if pos_ext == -1:
+            raise ValueError
+        file_write = Dataset("temp_file.tmp", "w")
+    elif isinstance(path_netcdf, Dataset):
+        file_write = path_netcdf
+    else:
+        raise ValueError
+
+    stitcher = H5Stitcher(file_write)
+    stitcher.append(file_read, timestamp, dt)
+
+    if isinstance(path_netcdf, str):
+        file_write.close()
+        replace("temp_file.tmp", path_netcdf)
