@@ -63,7 +63,7 @@ def file_list_from_path(sftp_session, path_to_list: str = None) -> list:
 def get_server_path(base_path: str) -> str:
     """Build the complete path to download the current file from"""
     today = datetime.now(tz=timezone.utc)
-    return f"{base_path}/{today.strftime('%y-%m-%d')}"
+    return f"{base_path}/{today.strftime('%Y-%m-%d')}"
 
 
 def extract_info_dict(path: str) -> dict:
