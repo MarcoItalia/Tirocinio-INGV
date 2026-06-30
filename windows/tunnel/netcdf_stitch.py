@@ -42,6 +42,18 @@ def dicts_are_equal(dict1: dict, dict2: dict) -> bool:
     return True
 
 
+def find_add_info(info_path: str) -> bool:
+    """
+    Check whether the _add_info.yaml file exists at the given path. 
+    Return True if found, else False
+    Parameters
+    ----------
+    info_path: str
+        directory in which to look for the file
+    """
+    return path.isfile(info_path)
+
+
 def wait_for_first_file() -> str:
     """Block until at least one matching file appears; return its timestamp string."""
     while True:
@@ -59,7 +71,7 @@ def stitch(timestamp_str: str, add_info_bool) -> None:
     timestamp = double(timestamp_str)
     date = datetime.fromtimestamp(timestamp, tz=timezone.utc)
 
-    tmp_path = f"{PATH_TO_SAVE}download_incomplete.tmp"
+    tmp_path = f"{PATH_TO_SAVE}_stitch_incomplete.h5"
     prefix = "UNK"
 
     with Dataset(tmp_path, "w") as file_write:
@@ -83,10 +95,10 @@ def stitch(timestamp_str: str, add_info_bool) -> None:
                             if add_info_bool:
                                 add_info = yaml_read(INFO_PATH)
                         except FileNotFoundError:
-                            add_info_bool = False
                             print("Info file not found, check the dir")
                             print(
-                                "Stitching will resume without the additional info.\n\n")
+                                "Stitching will resume when the additional info. can be found!\n\n")
+                            break
                         dt_to_aggregate = dt
                         prefix = read_attribute(file_read, "Location")
                     elif dt != dt_to_aggregate:
@@ -104,10 +116,9 @@ def stitch(timestamp_str: str, add_info_bool) -> None:
 
                 try:
                     remove(file_path)
-                except FileNotFoundError as e:
+                except FileNotFoundError:
                     print(
                         f"File {timestamp + i - 1}{FILE_EXT} not found for removal.")
-                    print(f"Exception: {e}\n")
 
             except FileNotFoundError:
                 print(f"File {timestamp + i}{FILE_EXT} not found.")
@@ -135,16 +146,18 @@ def main() -> None:
     acquisition server, stitches up to FILES_PER_STITCH of them into a single output file
     using H5Stitcher, then removes the originals.
     """
-
+    info_bool = True
     try:
         mkdir(PATH_TO_SAVE)
     except FileExistsError:
         pass
-
+    if info_bool:
+        while not find_add_info(INFO_PATH):
+            sleep(1)
     while True:
         timestamp_str = wait_for_first_file()
         print(f"\nStitching {timestamp_str}\n")
-        stitch(timestamp_str, add_info_bool=True)
+        stitch(timestamp_str, add_info_bool=info_bool)
 
 
 if __name__ == "__main__":

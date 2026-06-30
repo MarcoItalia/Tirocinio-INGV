@@ -171,7 +171,7 @@ def main() -> None:
     # ── Start a thread to stitch the downloaded file ──────────────────────────────
 
     t = Thread(target=netcdf_stitch.main,
-               name="Stitch", daemon=False)
+               name="Stitch", daemon=True)
     t.start()
 
     # ── Download all the file in the directory ──────────────────────────────
@@ -209,17 +209,6 @@ def main() -> None:
             print("Checking if the script is still running")
             if not script_manager.is_script_running(client, SCRIPT_NAME):
                 print(f"Starting script at {PATH_SERVER}/{SCRIPT_NAME}")
-                script_manager.start_script(
-                    client, f"{PATH_SERVER}/{SCRIPT_NAME}")
-                consecutive_fails = 0
-                sleep(1.5)
-            # because 0mq doesn't have an innate and easy mode to check the connection,
-            # SCRIPT_NAME doesn't have a contingency in case the connection drops.
-            # This is the easiest and laziest way to just reset the connection
-            elif consecutive_fails >= 400:
-                script_manager.script_kill(
-                    client, f"{PATH_SERVER}/{SCRIPT_NAME}")
-                sleep(0.2)
                 script_manager.start_script(
                     client, f"{PATH_SERVER}/{SCRIPT_NAME}")
                 consecutive_fails = 0
