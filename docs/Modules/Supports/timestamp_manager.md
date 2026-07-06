@@ -1,4 +1,4 @@
-Modulo di supporto usato da [ZMQ_data_collector](ZMQ_data_collector). Gestisce la persistenza dell'ultimo timestamp acquisito in `timestamp.json`, permettendo al collector di riprendere dall'ultimo dato acquisito dopo un riavvio.
+Modulo di supporto usato da [ZMQ_data_collector](../Server/ZMQ_data_collector.md). Gestisce la persistenza dell'ultimo timestamp acquisito in `timestamp.json`, permettendo al collector di riprendere dall'ultimo dato acquisito dopo un riavvio.
 
 > [!info]
 > La macchina DAS **NON** mantiene tutti i dati acquisiti in memoria. Nel caso in cui il timestamp sia troppo vecchio, la macchina DAS risponde con l'ultimo dato acquisito. 

@@ -1,4 +1,4 @@
-Thread daemon avviato da [ZMQ_data_collector](ZMQ_data_collector). Si connette via SSH/SFTP direttamente alla macchina DAS, scarica un file `.h5` completo ogni `59` secondi ed estrae gli attributi supplementari definiti in `supplement_attribute` (config). Se i valori sono cambiati, aggiorna `_add_info.yaml` e lo copia atomicamente in `SAVE_PATH` così che [netcdf_stitch](netcdf_stitch) (lato Client) possa leggerlo al prossimo ciclo di aggregazione.
+Thread daemon avviato da [ZMQ_data_collector](ZMQ_data_collector.md). Si connette via SSH/SFTP direttamente alla macchina DAS, scarica un file `.h5` completo ogni `59` secondi ed estrae gli attributi supplementari definiti in `supplement_attribute` (config). Se i valori sono cambiati, aggiorna `_add_info.yaml` e lo copia atomicamente in `SAVE_PATH` così che [netcdf_stitch](../Client/netcdf_stitch.md) (lato Client) possa leggerlo al prossimo ciclo di aggregazione.
 
 > [!info]
 > Lo sleep è hard-coded.

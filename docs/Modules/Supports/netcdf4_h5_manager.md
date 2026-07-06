@@ -1,5 +1,5 @@
 Modulo per la lettura e scrittura di file HDF5 (formato NetCDF4).
-Usato da [ZMQ_data_collector](ZMQ_data_collector) (scrittura singola), [netcdf_stitch](netcdf_stitch) (aggregazione) e [ssh_file_reader](ssh_file_reader) (lettura attributi).
+Usato da [ZMQ_data_collector](../Server/ZMQ_data_collector.md) (scrittura singola), [netcdf_stitch](../Client/netcdf_stitch.md) (aggregazione) e [ssh_file_reader](../Server/ssh_file_reader.md) (lettura attributi).
 
 ---
 
@@ -74,4 +74,4 @@ with Dataset("output.h5", "w") as file_write:
 
 > *def h5_file_write*(path_netcdf, file_read, timestamp, dt):
 >     Writer single-shot backward-compatible. Crea un `H5Stitcher` e chiama `append` una volta sola.
->     Usato da [ZMQ_data_collector](ZMQ_data_collector) per scrivere ogni pacchetto acquisito.
+>     Usato da [ZMQ_data_collector](../Server/ZMQ_data_collector.md) per scrivere ogni pacchetto acquisito.

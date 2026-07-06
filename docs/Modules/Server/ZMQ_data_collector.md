@@ -1,6 +1,6 @@
 Script principale del Server. Acquisisce dati StrainRate dalla macchina DAS tramite ZeroMQ (protocollo REQ/REP) e li salva in locale come file `.h5` in una coda FiFo.
-Avvia in background il thread [ssh_file_reader](ssh_file_reader) per aggiornare i dati supplementari ogni `59` secondi.
-Riprende l'acquisizione dall'ultimo timestamp salvato tramite [timestamp_manager](timestamp_manager).
+Avvia in background il thread [ssh_file_reader](ssh_file_reader.md) per aggiornare i dati supplementari ogni `59` secondi.
+Riprende l'acquisizione dall'ultimo timestamp salvato tramite [timestamp_manager](../Supports/timestamp_manager.md).
 
 ---
 
@@ -51,7 +51,7 @@ Incapsula il socket ZMQ REQ. Gestisce timeout e riconnessione automatica.
 ## Funzioni
 
 > *def write_packet*(timestamp, strain_rate, dt):
->	Controlla la dimensione della coda. Se non è piena, scrive il file `.h5` tramite [netcdf4_h5_manager](netcdf4_h5_manager).
+>	Controlla la dimensione della coda. Se non è piena, scrive il file `.h5` tramite [netcdf4_h5_manager](../Supports/netcdf4_h5_manager.md).
 
 > *def main*() -> None:
->	Crea `SAVE_PATH`, avvia il thread [ssh_file_reader](ssh_file_reader), legge l'ultimo timestamp da [timestamp_manager](timestamp_manager) e avvia il loop di acquisizione. Per ogni pacchetto valido: reshape dei dati → `write_packet` → aggiornamento timestamp. Se i dati non sono nuovi, dorme 150ms per evitare busy-loop. Termina con `sys_exit()` se `COUNT != 1`.
+>	Crea `SAVE_PATH`, avvia il thread [ssh_file_reader](ssh_file_reader.md), legge l'ultimo timestamp da [timestamp_manager](../Supports/timestamp_manager.md) e avvia il loop di acquisizione. Per ogni pacchetto valido: reshape dei dati → `write_packet` → aggiornamento timestamp. Se i dati non sono nuovi, dorme 150ms per evitare busy-loop. Termina con `sys_exit()` se `COUNT != 1`.

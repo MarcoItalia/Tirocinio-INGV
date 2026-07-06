@@ -1,4 +1,4 @@
-Thread daemon avviato da [client_ssh](client_ssh). Monitora la directory locale e aggrega i file .h5 da 1 secondo in file da `seconds_to_aggregate` secondi (default: `60`) usando [netcdf4_h5_manager](netcdf4_h5_manager).
+Thread daemon avviato da [client_ssh](client_ssh.md). Monitora la directory locale e aggrega i file .h5 da 1 secondo in file da `seconds_to_aggregate` secondi (default: `60`) usando [netcdf4_h5_manager](../Supports/netcdf4_h5_manager.md).
 
 I file successivi vengono trovati incrementando il timestamp nel nome. Il file aggregato viene scritto prima come `_stitch_incomplete.h5` e rinominato atomicamente al termine, con nome `{LOC}_{YYYYMMDD}-{HHMMSS}.h5`. I file sorgente vengono rimossi dopo l'aggregazione.
 

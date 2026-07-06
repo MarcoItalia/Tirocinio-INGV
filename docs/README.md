@@ -43,29 +43,29 @@ pyyaml        # lettura file di configurazione
 
 ## Indice della documentazione
 
-Per una guida all'avvio e alla configurazione: [Introduzione](Introduzione)
-Per i requisiti di sistema: [Requisiti](Requisiti)
+Per una guida all'avvio e alla configurazione: [Introduzione](Introduzione.md)
+Per i requisiti di sistema: [Requisiti](Requisiti.md)
 
 ### Moduli Server (`linux_debian/service/`)
 
-| Modulo                 | Funzione                                               |
-| ---------------------- | ------------------------------------------------------ |
-| [ZMQ_data_collector](ZMQ_data_collector) | Acquisisce dati dalla macchina DAS via ZeroMQ          |
-| [ssh_file_reader](ssh_file_reader)    | Scarica dati supplementari dalla macchina DAS ogni 59s |
+| Modulo                                                     | Funzione                                               |
+| ---------------------------------------------------------- | ------------------------------------------------------ |
+| [ZMQ_data_collector](Modules/Server/ZMQ_data_collector.md) | Acquisisce dati dalla macchina DAS via ZeroMQ          |
+| [ssh_file_reader](Modules/Server/ssh_file_reader.md)       | Scarica dati supplementari dalla macchina DAS ogni 59s |
 
 
 ### Moduli Client (`windows/tunnel/`)
 
 | Modulo            | Funzione                                   |
 | ----------------- | ------------------------------------------ |
-| [client_ssh](client_ssh)    | Scarica i file .h5 dal Server via SSH/SFTP |
-| [netcdf_stitch](netcdf_stitch) | Aggrega i file da 1s in file da 60s        |
+| [client_ssh](Modules/Client/client_ssh.md)    | Scarica i file .h5 dal Server via SSH/SFTP |
+| [netcdf_stitch](Modules/Client/netcdf_stitch.md) | Aggrega i file da 1s in file da 60s        |
 
 ### Moduli di supporto (Client e Server)
 
 | Modulo                 | Funzione                                       |
 | ---------------------- | ---------------------------------------------- |
-| [netcdf4_h5_manager](netcdf4_h5_manager) | Lettura e scrittura file HDF5                  |
-| [yaml_manager](yaml_manager)       | Lettura e scrittura file YAML                  |
-| [script_manager](script_manager)     | Gestione processi remoti via SSH               |
-| [timestamp_manager](timestamp_manager)  | Persiste l'ultimo timestamp acquisito su disco |
+| [netcdf4_h5_manager](Modules/Supports/netcdf4_h5_manager.md) | Lettura e scrittura file HDF5                  |
+| [yaml_manager](Modules/Supports/yaml_manager.md)       | Lettura e scrittura file YAML                  |
+| [script_manager](Modules/Supports/script_manager.md)     | Gestione processi remoti via SSH               |
+| [timestamp_manager](Modules/Supports/timestamp_manager.md)  | Persiste l'ultimo timestamp acquisito su disco |

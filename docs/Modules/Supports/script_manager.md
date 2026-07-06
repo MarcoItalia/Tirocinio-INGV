@@ -1,4 +1,4 @@
-Modulo di supporto usato da [client_ssh](client_ssh). Fornisce funzioni per controllare e gestire processi remoti su una macchina connessa via SSH.
+Modulo di supporto usato da [client_ssh](../Client/client_ssh.md). Fornisce funzioni per controllare e gestire processi remoti su una macchina connessa via SSH.
 
 ---
 
