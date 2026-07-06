@@ -7,10 +7,10 @@ Documentazione del sistema realizzato da Marco Italia per l'acquisizione real-ti
 ## Architettura
 
 ```
-[Macchina DAS] ──ZMQ──► [Server VM (OPENFIBER)] ──SSH/SFTP──► [Client (INGV via VPN)]
-                                   │
-                          [ssh_file_reader]
-                         (dati supplementari)
+[Client (INGV via VPN)] ──SSH/SFTP──► [Server VM (OPENFIBER)] ──ZMQ──► [Macchina DAS]
+                                                  │
+                                         [ssh_file_reader]
+                                        (dati supplementari)
 ```
 
 - **Macchina DAS**: espone dati StrainRate tramite ZeroMQ. Raggiungibile **solo** dal Server.

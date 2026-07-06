@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Modules/Client/client_ssh.md",
+                "file": "README.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "client_ssh"
+              "title": "README"
             }
           }
         ]
@@ -185,19 +185,17 @@
   },
   "active": "9cd125da6f7e48da",
   "lastOpenFiles": [
+    "Requisiti.md",
+    "README.md",
+    "Modules/Supports/timestamp_manager.md",
+    "Modules/Supports/script_manager.md",
+    "Modules/Supports/netcdf4_h5_manager.md",
+    "Modules/Client/client_ssh.md",
     "Modules/Client/netcdf_stitch.md",
     "Modules/Server/ssh_file_reader.md",
     "Modules/Server/ZMQ_data_collector.md",
-    "Modules/Supports/timestamp_manager.md",
     "Modules/Supports/yaml_manager.md",
     "Introduzione.md",
-    "Modules/Supports/netcdf4_h5_manager.md",
-    "Modules/Supports/script_manager.md",
-    "README.md",
-    "Modules/Client/client_ssh.md",
-    "Requisiti.md",
-    "dict_to_namespace.md",
-    "Modules/Supports/dict_to_namespace.md",
     "Modules/Server/timestamp_manager.md.tmp.48012.e01f910a7d71",
     "Introduzione.md.tmp.48012.ce17840fa685",
     "Requisiti.md.tmp.48012.3ae1a674bee6"
