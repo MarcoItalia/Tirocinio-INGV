@@ -6,15 +6,15 @@ socket_ssh:
   protocol: tcp #must stay tcp
   ip: 0.0.0.0 #testing purposes
   port: 5555
+credentials:
+  user: marco
+  passwd: marco
 data_window:
   channels_start: 150
   channels_end: 300
   overlap: 20
   location: "Niscemi"
   leave_file_untouched: False
-credentials:
-  user: marco
-  passwd: marco
 paths:
   save_path: "data"
   info_dir: "config"
