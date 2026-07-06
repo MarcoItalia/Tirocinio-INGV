@@ -1,5 +1,5 @@
-Codice scritto per il tirocinio
+Codice scritto per il tirocinio.
 
-Il progetto consiste nell'aquisizione di dati da una macchina protetta.
-Il client locale apre una connessione ssh-tunnel verso una VM in ascolto all'interno di una VPN.
-Dopo la connessione la VM acquisirà dati attraverso uno script, ed il client si limiterà ad acquisirli.
+Progetto per l'acquisizione real-time di dati dalla macchina DAS nella rete protetta OPENFIBER (INGV / OPENFIBER).
+
+Documentazione completa: [docs/README.md](docs/README.md)
