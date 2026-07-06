@@ -21,9 +21,10 @@ PATH_LOCAL = config["paths"]["path_local"]
 SERVER_DIR_NAME = config["paths"]["server_save_dir"]
 SCRIPT_NAME = config["server_script_name"]
 INFO_PATH = config["paths"]["info_dir"]
-
+ADD_INFO_FILE_NAME = "_add_info.yaml"
 
 # ── Support functions ──────────────────────────────
+
 
 def file_list_from_path(sftp_session, path_to_list: str = None) -> list:
     """
@@ -44,16 +45,16 @@ def file_list_from_path(sftp_session, path_to_list: str = None) -> list:
 def up_file(list_last_timestamp, fails) -> list:
     """
     Check if the passed list as other elements. If it's True, than return the list minus the first element.
-    If the list has no elements, then return it. If the list as just one element and have not yet failed, 
+    If the list has no elements, then return it. If the list as just one element and have not yet failed,
     that means that this element has been already checked (last iteration had 2 element and was returned as a list of
     this singular item), the function "increment" the name as it was a double and return that new file.
     Parameters
     ----------
     list_last_timestamp: list
-        list of files that rapresent the files to check. 
+        list of files that rapresent the files to check.
         It's the output of file_list_from_path or up_file or [].
     fails: int
-        number of times the current file has been checked and was not found. 
+        number of times the current file has been checked and was not found.
         Only when the last file as not yet failed it needs to be incremented.
     """
     if len(list_last_timestamp) > 1:
@@ -92,14 +93,14 @@ def create_dir(path_dir: str):
 def get_next_file(sftp_session, path: str, list_last_timestamp, fails) -> list:
     """
     Return a list of ordered files from which the first element is the next
-    that need to be downloaded. 
+    that need to be downloaded.
     It reset the list reading the dir if the list is empty or if it failed too many times.
     Parameters
     ----------
     path: str
         absolute path. The function will pass this to file_list_from_path in theoffchance it need to read the directory.
     list_last_timestamp: list
-        list of files that rapresent the files to check. 
+        list of files that rapresent the files to check.
         It's the output of file_list_from_path or up_file or [].
     fails: int
         number of fails to find a file.
@@ -120,7 +121,7 @@ def get_next_file(sftp_session, path: str, list_last_timestamp, fails) -> list:
 
 def connect(host_ip, host_port, usarname: str, password: str):
     """
-    Create a ssh connection using paramiko. 
+    Create a ssh connection using paramiko.
     Return SSHClient and open_sftp, in this order.
     Parameters
     ----------
@@ -145,7 +146,7 @@ def connect(host_ip, host_port, usarname: str, password: str):
 def main() -> None:
     """Connect to a remote machine via ssh and download .h5 in a specified dir using sftp.
     If you download a .yaml file, the program put that in another dir.
-    Start a script in the remote machine to take the data (.h5 files) from the acquisition machine 
+    Start a script in the remote machine to take the data (.h5 files) from the acquisition machine
     Start a thread to "stitch" the .h5 file together and use the .yaml file to add the missing information.
     """
     # ── Connect using the function ──────────────────────────────
@@ -171,11 +172,12 @@ def main() -> None:
     # ── Start a thread to stitch the downloaded file ──────────────────────────────
 
     t = Thread(target=netcdf_stitch.main,
-               name="Stitch", daemon=False)
+               name="Stitch", daemon=True)
     t.start()
 
     # ── Download all the file in the directory ──────────────────────────────
 
+    first_add_file = True
     file_list = []
     consecutive_fails = 0
 
@@ -213,19 +215,26 @@ def main() -> None:
                     client, f"{PATH_SERVER}/{SCRIPT_NAME}")
                 consecutive_fails = 0
                 sleep(1.5)
-            # because 0mq doesn't have an innate and easy mode to check the connection,
-            # SCRIPT_NAME doesn't have a contingency in case the connection drops.
-            # This is the easiest and laziest way to just reset the connection
-            elif consecutive_fails >= 400:
-                script_manager.script_kill(
-                    client, f"{PATH_SERVER}/{SCRIPT_NAME}")
-                sleep(0.2)
-                script_manager.start_script(
-                    client, f"{PATH_SERVER}/{SCRIPT_NAME}")
-                consecutive_fails = 0
-                sleep(1.5)
 
             file_list = []
+
+        if first_add_file:
+            try:
+                sftp_session.get(f"{PATH_SERVER}/{SERVER_DIR_NAME}/{ADD_INFO_FILE_NAME}",
+                                 f"{INFO_PATH}/_temp_download_info")
+                try:
+                    rename(f"{INFO_PATH}/_temp_download_info",
+                           f"{INFO_PATH}/{ADD_INFO_FILE_NAME}")
+                except WindowsError:
+                    remove(f"{INFO_PATH}/{ADD_INFO_FILE_NAME}")
+                    rename(f"{INFO_PATH}/_temp_download_info",
+                           f"{INFO_PATH}/{ADD_INFO_FILE_NAME}")
+                sftp_session.remove(
+                    f"{PATH_SERVER}/{SERVER_DIR_NAME}/{ADD_INFO_FILE_NAME}")
+                first_add_file = False
+                print(f"\nRead {ADD_INFO_FILE_NAME}")
+            except FileNotFoundError:
+                pass
 
         try:
 
@@ -259,6 +268,7 @@ def main() -> None:
                     sftp_session.remove(
                         f"{PATH_SERVER}/{SERVER_DIR_NAME}/{file_list[0]}")
                     print(f"\nRead {file_list[0]}")
+                    first_add_file = False
                     continue
                 consecutive_fails += 1
                 continue
