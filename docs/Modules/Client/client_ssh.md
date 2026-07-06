@@ -1,11 +1,11 @@
-Script centrale del Client. Legge la configurazione tramite [[yaml_manager]], apre una connessione SSH con Paramiko al Server e controlla se [[ZMQ_data_collector]] è in esecuzione — se non lo è, lo avvia.
-Crea le directory locali necessarie, avvia il thread [[netcdf_stitch]] (daemon) e scarica continuamente i file .h5 dalla coda del Server.
+Script centrale del Client. Legge la configurazione tramite [yaml_manager](yaml_manager), apre una connessione SSH con Paramiko al Server e controlla se [ZMQ_data_collector](ZMQ_data_collector) è in esecuzione — se non lo è, lo avvia.
+Crea le directory locali necessarie, avvia il thread [netcdf_stitch](netcdf_stitch) (daemon) e scarica continuamente i file .h5 dalla coda del Server.
 
-I file vengono scaricati prima in un file temporaneo (`_temp_download_file`) e poi rinominati atomicamente, così che [[netcdf_stitch]] non legga mai file parziali.
+I file vengono scaricati prima in un file temporaneo (`_temp_download_file`) e poi rinominati atomicamente, così che [netcdf_stitch](netcdf_stitch) non legga mai file parziali.
 Dopo ogni download il file viene rimosso dal Server.
 Gestisce anche i file `.yaml` supplementari (`_add_info.yaml`), salvandoli in `INFO_PATH`.
 
-Se `consecutive_fails >= 60`, verifica la connessione SSH e lo stato di [[ZMQ_data_collector]], riconnettendosi o riavviando lo script se necessario.
+Se `consecutive_fails >= 60`, verifica la connessione SSH e lo stato di [ZMQ_data_collector](ZMQ_data_collector), riconnettendosi o riavviando lo script se necessario.
 
 ---
 

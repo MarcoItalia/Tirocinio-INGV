@@ -1,7 +1,7 @@
 # Introduzione
 
 Guida alla configurazione e all'avvio del sistema di acquisizione.
-Per una panoramica dei requisiti di sistema vedere [[Requisiti]].
+Per una panoramica dei requisiti di sistema vedere [Requisiti](Requisiti).
 
 ---
 
@@ -70,7 +70,7 @@ python client_ssh.py
 **`client_ssh.py`** in sequenza:
 1. Si connette via SSH al Server
 2. Avvia `ZMQ_data_collector.py` sul Server (se non già in esecuzione)
-3. Lancia il thread [[netcdf_stitch]] in background
+3. Lancia il thread [netcdf_stitch](netcdf_stitch) in background
 4. Scarica i file .h5 dalla coda del Server man mano che arrivano
 
 Il **Server** si avvia automaticamente; non è necessario avviarlo manualmente.
@@ -94,11 +94,11 @@ dove `LOC` corrisponde ai primi 3 caratteri dell'attributo `location` nel file s
 
 | Modulo                 | Dove gira       | Funzione                                    |
 | ---------------------- | --------------- | ------------------------------------------- |
-| [[ZMQ_data_collector]] | Server          | Acquisisce dati dalla macchina DAS via ZMQ  |
-| [[ssh_file_reader]]    | Server (thread) | Scarica dati supplementari via SSH ogni 59s |
-| [[timestamp_manager]]  | Server          | Persiste l'ultimo timestamp acquisito       |
-| [[client_ssh]]         | Client          | Scarica file .h5 dal Server via SFTP        |
-| [[netcdf_stitch]]      | Client (thread) | Aggrega file da 1s in file da 60s           |
-| [[netcdf4_h5_manager]] | Client + Server | Lettura/scrittura file HDF5                 |
-| [[yaml_manager]]     | Client + Server | Lettura/scrittura file YAML                 |
-| [[script_manager]]     | Client          | Gestione processi remoti via SSH            |
+| [ZMQ_data_collector](ZMQ_data_collector) | Server          | Acquisisce dati dalla macchina DAS via ZMQ  |
+| [ssh_file_reader](ssh_file_reader)    | Server (thread) | Scarica dati supplementari via SSH ogni 59s |
+| [timestamp_manager](timestamp_manager)  | Server          | Persiste l'ultimo timestamp acquisito       |
+| [client_ssh](client_ssh)         | Client          | Scarica file .h5 dal Server via SFTP        |
+| [netcdf_stitch](netcdf_stitch)      | Client (thread) | Aggrega file da 1s in file da 60s           |
+| [netcdf4_h5_manager](netcdf4_h5_manager) | Client + Server | Lettura/scrittura file HDF5                 |
+| [yaml_manager](yaml_manager)     | Client + Server | Lettura/scrittura file YAML                 |
+| [script_manager](script_manager)     | Client          | Gestione processi remoti via SSH            |
